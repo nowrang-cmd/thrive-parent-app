@@ -700,3 +700,387 @@ body,
   background: #c8a44d !important;
   color: #050505 !important;
 }
+
+/* ================================
+   THRiVE INTAKE DASHBOARD
+================================ */
+
+.dashboard-page {
+  grid-template-columns: 1fr !important;
+  width: min(720px, calc(100vw - 32px)) !important;
+}
+
+.dashboard-login-card {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(145deg, rgba(23, 23, 23, 0.98), rgba(5, 5, 5, 0.98));
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  border-radius: 28px;
+  padding: 42px;
+}
+
+.dashboard-login-card h1 {
+  color: #ffffff !important;
+  text-shadow: 0 0 24px rgba(200, 164, 77, 0.22);
+}
+
+.dashboard-login-form {
+  margin-top: 26px;
+}
+
+.dashboard-shell {
+  min-height: 100vh;
+  width: min(1280px, calc(100vw - 48px));
+  margin: 0 auto;
+  padding: 36px 0 52px;
+  color: #ffffff;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 24px;
+  padding: 28px;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    radial-gradient(circle at top left, rgba(200, 164, 77, 0.18), transparent 36%),
+    linear-gradient(145deg, #171717, #050505);
+}
+
+.dashboard-header h1 {
+  color: #ffffff !important;
+  font-size: clamp(48px, 6vw, 76px);
+  text-shadow: 0 0 24px rgba(200, 164, 77, 0.22);
+}
+
+.logout-button,
+.refresh-button {
+  border: 1px solid rgba(200, 164, 77, 0.5);
+  background: rgba(200, 164, 77, 0.1);
+  color: #e0bc6a;
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.logout-button:hover,
+.refresh-button:hover {
+  background: rgba(200, 164, 77, 0.18);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  padding: 20px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(145deg, #171717, #0a0a0a);
+}
+
+.stat-card span {
+  display: block;
+  color: #b8b8b8;
+  font-family: "Barlow Condensed", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 800;
+}
+
+.stat-card strong {
+  display: block;
+  margin-top: 8px;
+  color: #e0bc6a;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 54px;
+  line-height: 0.9;
+}
+
+.requests-panel {
+  padding: 28px;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(145deg, rgba(23, 23, 23, 0.98), rgba(5, 5, 5, 0.98));
+}
+
+.requests-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.requests-panel h2 {
+  color: #ffffff !important;
+  font-size: 46px;
+  text-shadow: 0 0 20px rgba(200, 164, 77, 0.18);
+}
+
+.empty-state {
+  padding: 28px;
+  border-radius: 18px;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  color: #b8b8b8;
+  text-align: center;
+}
+
+.requests-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.request-card {
+  padding: 22px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    radial-gradient(circle at top right, rgba(200, 164, 77, 0.08), transparent 30%),
+    #101010;
+}
+
+.request-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.request-card h3 {
+  margin: 0;
+  color: #ffffff;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 32px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.request-card p {
+  margin: 6px 0 0;
+  color: #d8d8d8;
+}
+
+.status-select {
+  min-width: 165px;
+  border-radius: 12px;
+  border: 1px solid rgba(200, 164, 77, 0.45);
+  background: #080808 !important;
+  color: #ffffff !important;
+  padding: 10px 12px;
+  font-weight: 800;
+}
+
+.request-details-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.request-details-grid div {
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.request-details-grid span,
+.goal-box span {
+  display: block;
+  color: #b8b8b8;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 800;
+}
+
+.request-details-grid strong {
+  display: block;
+  margin-top: 4px;
+  color: #ffffff;
+  font-size: 17px;
+}
+
+.contact-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.contact-row a {
+  color: #050505;
+  background: linear-gradient(135deg, #c8a44d, #e0bc6a);
+  text-decoration: none;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 900;
+}
+
+.goal-box {
+  padding: 16px;
+  border-left: 4px solid #c8a44d;
+  background: rgba(200, 164, 77, 0.08);
+  border-radius: 14px;
+}
+
+.goal-box p {
+  margin: 6px 0 0;
+  color: #ffffff;
+  line-height: 1.4;
+}
+
+@media (max-width: 920px) {
+  .dashboard-shell {
+    width: min(100%, calc(100vw - 24px));
+    padding-top: 18px;
+  }
+
+  .dashboard-header,
+  .requests-panel {
+    padding: 22px;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .request-top {
+    flex-direction: column;
+  }
+
+  .request-details-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .status-select {
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .stats-grid,
+  .request-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-login-card {
+    padding: 24px;
+  }
+
+  .requests-panel h2 {
+    font-size: 38px;
+  }
+
+  .request-card h3 {
+    font-size: 28px;
+  }
+}
+
+/* ================================
+   DASHBOARD ARCHIVE BUTTON
+================================ */
+
+.request-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.archive-button {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 17px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.archive-button:hover {
+  border-color: rgba(200, 164, 77, 0.5);
+  background: rgba(200, 164, 77, 0.12);
+  color: #e0bc6a;
+}
+
+@media (max-width: 920px) {
+  .request-actions {
+    width: 100%;
+  }
+
+  .archive-button {
+    width: 100%;
+  }
+}
+/* ================================
+   DASHBOARD TEXT VISIBILITY SAFETY
+================================ */
+
+.dashboard-shell,
+.dashboard-shell h1,
+.dashboard-shell h2,
+.dashboard-shell h3,
+.dashboard-shell p,
+.dashboard-shell span,
+.dashboard-shell strong,
+.dashboard-login-card,
+.dashboard-login-card h1,
+.dashboard-login-card h2,
+.dashboard-login-card p,
+.dashboard-login-card label {
+  color: #ffffff !important;
+}
+
+.dashboard-shell .eyebrow,
+.dashboard-login-card .logo-pill,
+.requests-panel .eyebrow,
+.goal-box span,
+.request-details-grid span,
+.stat-card strong {
+  color: #e0bc6a !important;
+}
+
+.stat-card span,
+.empty-state {
+  color: #b8b8b8 !important;
+}
+
+.status-select,
+.status-select option {
+  background: #080808 !important;
+  color: #ffffff !important;
+}
+
+.archive-button {
+  color: #ffffff !important;
+}
+
+.contact-row a {
+  color: #050505 !important;
+}
+.contact-row a {
+  color: #050505 !important;
+}
