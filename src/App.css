@@ -1,184 +1,674 @@
-.counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&display=swap");
 
-  &:hover {
-    border-color: var(--accent-border);
-  }
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
+:root {
+  --black: #050505;
+  --charcoal: #111111;
+  --panel: #171717;
+  --panel-light: #202020;
+  --gold: #c8a44d;
+  --gold-light: #e0bc6a;
+  --white: #ffffff;
+  --muted: #b8b8b8;
+  --line: rgba(255, 255, 255, 0.12);
+  --danger: #ff4d4d;
 }
 
-.hero {
-  position: relative;
-
-  .base,
-  .framework,
-  .vite {
-    inset-inline: 0;
-    margin: 0 auto;
-  }
-
-  .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
-  }
-
-  .framework,
-  .vite {
-    position: absolute;
-  }
-
-  .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
-  }
-
-  .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
+* {
+  box-sizing: border-box;
 }
 
-#center {
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top left, rgba(200, 164, 77, 0.22), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(224, 188, 106, 0.12), transparent 30%),
+    var(--black);
+  color: var(--white);
+  font-family: "Barlow", sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+.page {
+  min-height: 100vh;
+  width: 100%;
+  padding: 32px;
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 28px;
+  align-items: center;
+}
+
+.hero-panel,
+.form-card,
+.confirmation-card {
+  border: 1px solid var(--line);
+  background: linear-gradient(145deg, rgba(23, 23, 23, 0.98), rgba(5, 5, 5, 0.98));
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  border-radius: 28px;
+}
+
+.hero-panel {
+  padding: 36px;
+  min-height: 680px;
   display: flex;
   flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
 
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
+.hero-panel::after {
+  content: "";
+  position: absolute;
+  inset: auto -80px -120px auto;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  border: 1px solid rgba(200, 164, 77, 0.25);
+  box-shadow: 0 0 80px rgba(200, 164, 77, 0.18);
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.brand-mark {
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  color: #080808;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 48px;
+  letter-spacing: 1px;
+  box-shadow: 0 0 34px rgba(200, 164, 77, 0.35);
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--gold-light);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+h1,
+h2 {
+  margin: 0;
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 1px;
+  line-height: 0.95;
+}
+
+h1 {
+  font-size: clamp(54px, 6vw, 92px);
+}
+
+h2 {
+  font-size: 46px;
+}
+
+.hero-copy {
+  margin: 34px 0;
+  max-width: 620px;
+  color: #e6e6e6;
+  font-size: 21px;
+  line-height: 1.45;
+  position: relative;
+  z-index: 1;
+}
+
+.trust-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.trust-grid div {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.trust-grid strong {
+  display: block;
+  color: var(--white);
+  font-family: "Barlow Condensed", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 22px;
+}
+
+.trust-grid span {
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.form-card {
+  padding: 30px;
+}
+
+.form-header {
+  margin-bottom: 24px;
+}
+
+.form-header p {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.section-title {
+  margin: 22px 0 12px;
+  padding: 9px 12px;
+  border-left: 4px solid var(--gold);
+  background: rgba(200, 164, 77, 0.08);
+  color: var(--gold-light);
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.field-grid.three {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+  color: #f2f2f2;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #0d0d0d;
+  color: var(--white);
+  padding: 14px 14px;
+  font-size: 16px;
+  outline: none;
+  transition: 0.2s ease;
+}
+
+textarea {
+  resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(200, 164, 77, 0.15);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #777;
+}
+
+.submit-button {
+  width: 100%;
+  margin-top: 12px;
+  border: none;
+  border-radius: 18px;
+  padding: 17px 18px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  color: #080808;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 24px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 0 28px rgba(200, 164, 77, 0.25);
+  transition: 0.2s ease;
+}
+
+.submit-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 42px rgba(200, 164, 77, 0.36);
+}
+
+.submit-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.payment-note {
+  margin: 16px 0 0;
+  color: var(--muted);
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.error-box {
+  margin: 16px 0;
+  padding: 13px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 77, 77, 0.4);
+  background: rgba(255, 77, 77, 0.1);
+  color: #ffb5b5;
+  font-weight: 700;
+}
+
+.confirmation-card {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 42px;
+  grid-column: 1 / -1;
+}
+
+.logo-pill {
+  display: inline-flex;
+  padding: 10px 14px;
+  border: 1px solid rgba(200, 164, 77, 0.4);
+  border-radius: 999px;
+  color: var(--gold-light);
+  background: rgba(200, 164, 77, 0.08);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  margin-bottom: 22px;
+}
+
+.confirmation-lead {
+  color: #e5e5e5;
+  font-size: 20px;
+  line-height: 1.5;
+  max-width: 760px;
+}
+
+.next-box {
+  margin: 28px 0;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.next-box h2 {
+  font-size: 38px;
+  margin-bottom: 18px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.step:last-child {
+  border-bottom: none;
+}
+
+.step span {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #080808;
+  font-weight: 900;
+}
+
+.step p {
+  margin: 0;
+  color: #e5e5e5;
+}
+
+.confirmation-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.primary-link,
+.secondary-link {
+  text-decoration: none;
+  border-radius: 16px;
+  padding: 15px 18px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 21px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.primary-link {
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  color: #080808;
+}
+
+.secondary-link {
+  border: 1px solid rgba(200, 164, 77, 0.45);
+  color: var(--gold-light);
+  background: rgba(200, 164, 77, 0.08);
+}
+
+@media (max-width: 980px) {
+  .page {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  .hero-panel {
+    min-height: auto;
+  }
+
+  .field-grid,
+  .field-grid.three {
+    grid-template-columns: 1fr;
+  }
+
+  h1 {
+    font-size: 58px;
+  }
+
+  h2 {
+    font-size: 40px;
   }
 }
 
-#next-steps {
-  display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
-
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
+@media (max-width: 560px) {
+  .page {
+    padding: 12px;
   }
 
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
+  .hero-panel,
+  .form-card,
+  .confirmation-card {
+    border-radius: 22px;
+    padding: 22px;
   }
 
-  @media (max-width: 1024px) {
+  .brand-row {
+    align-items: flex-start;
+  }
+
+  .brand-mark {
+    width: 58px;
+    height: 58px;
+    font-size: 38px;
+    border-radius: 18px;
+  }
+
+  h1 {
+    font-size: 46px;
+  }
+
+  .hero-copy {
+    font-size: 18px;
+  }
+
+  .confirmation-actions {
     flex-direction: column;
+  }
+
+  .primary-link,
+  .secondary-link {
     text-align: center;
   }
 }
+/* ================================
+   THRiVE PARENT APP — VISIBILITY FIX
+   Paste at VERY BOTTOM of App.css
+================================ */
 
-#docs {
-  border-right: 1px solid var(--border);
-
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
+/* Make main hero title visible */
+.hero-panel h1 {
+  color: #ffffff !important;
+  text-shadow: 0 0 28px rgba(200, 164, 77, 0.22);
 }
 
-#next-steps ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 8px;
-  margin: 32px 0 0;
+/* Make form title visible */
+.form-card h2 {
+  color: #ffffff !important;
+  text-shadow: 0 0 20px rgba(200, 164, 77, 0.18);
+}
 
-  .logo {
-    height: 18px;
+/* Improve hero layout spacing */
+.hero-panel {
+  justify-content: center !important;
+  padding: 42px 36px !important;
+}
+
+/* Make the THRiVE T mark look cleaner */
+.brand-mark {
+  color: #050505 !important;
+  font-weight: 900 !important;
+}
+
+/* Make the hero text easier to read */
+.hero-copy {
+  color: #ffffff !important;
+  font-weight: 500;
+}
+
+/* Improve the trust cards */
+.trust-grid div {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.025)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+}
+
+/* Better form readability */
+label {
+  color: #ffffff !important;
+}
+
+input,
+select,
+textarea {
+  color: #ffffff !important;
+  background: #080808 !important;
+}
+
+/* Make placeholder text visible but subtle */
+input::placeholder,
+textarea::placeholder {
+  color: #8f8f8f !important;
+}
+
+/* Make the page sit better on desktop */
+.page {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* Reduce oversized hero title slightly */
+.hero-panel h1 {
+  font-size: clamp(52px, 5vw, 76px) !important;
+  line-height: 0.96 !important;
+}
+
+/* Better mobile balance */
+@media (max-width: 980px) {
+  .hero-panel h1 {
+    font-size: 54px !important;
   }
 
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
+  .hero-panel {
+    text-align: center;
   }
 
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
+  .brand-row {
     justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
   }
 }
 
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
-  }
-}
+/* ================================
+   THRiVE LOGO HERO FIX
+   Logo centered at top of left column
+================================ */
 
-.ticks {
-  position: relative;
+.hero-logo-wrap {
   width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 28px;
+  position: relative;
+  z-index: 2;
+}
 
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
-  }
+.hero-logo {
+  width: min(260px, 78%);
+  height: auto;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 0 26px rgba(200, 164, 77, 0.35));
+}
 
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
-  }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
+.hero-title-block {
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+.hero-title-block .eyebrow {
+  text-align: center;
+}
+
+.hero-panel .hero-copy {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Hide old T logo if any old markup remains */
+.brand-mark {
+  display: none !important;
+}
+
+/* Make THRiVE logo bigger on the left hero panel */
+.hero-logo {
+  width: min(390px, 92%) !important;
+  max-width: 390px !important;
+}
+
+/* Give it a little more presence */
+.hero-logo-wrap {
+  margin-bottom: 32px !important;
+}
+
+/* ================================
+   ALIGN LEFT HERO CARD WITH RIGHT FORM CARD
+================================ */
+
+.page {
+  align-items: start !important;
+  padding-top: 42px !important;
+}
+
+.hero-panel {
+  margin-top: 0 !important;
+}
+
+.form-card {
+  margin-top: 0 !important;
+}
+/* ================================
+   REMOVE OUTER WHITE EDGE LINES
+================================ */
+
+html,
+body,
+#root {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  overflow-x: hidden !important;
+  background: #050505 !important;
+}
+
+.page {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* ================================
+   FIX PAGE CENTERING
+================================ */
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: hidden !important;
+  background: #050505 !important;
+}
+
+/* Center the full two-column app */
+.page {
+  width: min(1180px, calc(100vw - 48px)) !important;
+  max-width: 1180px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  padding-top: 42px !important;
+  padding-bottom: 42px !important;
+  display: grid !important;
+  grid-template-columns: 0.95fr 1.05fr !important;
+  gap: 28px !important;
+  align-items: start !important;
+}
+
+/* Keep both cards aligned at the top */
+.hero-panel,
+.form-card {
+  margin-top: 0 !important;
+}
+
+/* Mobile layout */
+@media (max-width: 980px) {
+  .page {
+    width: min(100%, calc(100vw - 24px)) !important;
+    grid-template-columns: 1fr !important;
+    padding-top: 18px !important;
+    padding-bottom: 18px !important;
   }
 }
