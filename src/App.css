@@ -1084,3 +1084,66 @@ body,
 .contact-row a {
   color: #050505 !important;
 }
+
+/* ================================
+   THRiVE OFFICIAL GOLD OVERRIDE
+   Official Gold: #C8A44D
+================================ */
+
+:root {
+  --gold: #C8A44D !important;
+  --gold-light: #C8A44D !important;
+}
+
+/* Dashboard gold text */
+.dashboard-shell .eyebrow,
+.dashboard-login-card .logo-pill,
+.requests-panel .eyebrow,
+.goal-box span,
+.request-details-grid span,
+.stat-card strong {
+  color: #C8A44D !important;
+}
+
+/* Gold buttons and accents */
+.submit-button,
+.contact-row a,
+.step span,
+.primary-link,
+.thrive-cta {
+  background: #C8A44D !important;
+  color: #050505 !important;
+}
+
+/* Gold borders */
+.logout-button,
+.refresh-button,
+.status-select,
+.goal-box,
+.dashboard-login-card .logo-pill,
+.logo-pill {
+  border-color: rgba(200, 164, 77, 0.55) !important;
+}
+
+/* Gold button text / outline buttons */
+.logout-button,
+.refresh-button,
+.secondary-link,
+.archive-button:hover {
+  color: #C8A44D !important;
+}
+
+/* Gold glows */
+.hero-logo {
+  filter: drop-shadow(0 0 26px rgba(200, 164, 77, 0.35)) !important;
+}
+
+.dashboard-header h1,
+.dashboard-login-card h1,
+.requests-panel h2,
+.confirmation-card h1,
+.confirmation-card h2,
+.hero-panel h1,
+.form-card h2 {
+  text-shadow: 0 0 24px rgba(200, 164, 77, 0.22) !important;
+}
