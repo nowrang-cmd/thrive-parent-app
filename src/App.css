@@ -672,3 +672,31 @@ body,
     padding-bottom: 18px !important;
   }
 }
+/* ================================
+   CONFIRMATION SCREEN VISIBILITY FIX
+================================ */
+
+.confirmation-card h1,
+.confirmation-card h2 {
+  color: #ffffff !important;
+  text-shadow: 0 0 24px rgba(200, 164, 77, 0.22);
+}
+
+.confirmation-card p,
+.confirmation-card .confirmation-lead,
+.confirmation-card .step p {
+  color: #ffffff !important;
+}
+
+.confirmation-card .next-box h2 {
+  color: #ffffff !important;
+}
+
+.confirmation-card .logo-pill {
+  color: #e0bc6a !important;
+}
+
+.confirmation-card .step span {
+  background: #c8a44d !important;
+  color: #050505 !important;
+}
