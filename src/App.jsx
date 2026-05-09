@@ -446,7 +446,7 @@ const dashboardStats = {
               className="secondary-link"
               href="https://www.thrivebasketball.org/copy-of-evaluation"
             >
-              Book $50 Evaluation Now
+              Book $20 Evaluation Now
             </a>
           </div>
         </section>
@@ -643,7 +643,7 @@ const dashboardStats = {
           </button>
 
           <p className="payment-note">
-            No payment is required to request information. The $50 evaluation
+            No payment is required to request information. The $20 evaluation
             fee only applies when you officially book your player evaluation.
           </p>
         </form>
