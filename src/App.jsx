@@ -453,85 +453,85 @@ function App() {
                 const status = normalizeStatus(request.status);
 
                 return (
-                  <article className="request-card" key={request.id}>
-                    <div className="request-top">
-                      <div>
-                        <h3>
-                          {request.player_first_name} {request.player_last_name}
-                        </h3>
+                  
+                  <article className="request-card compact-request-card" key={request.id}>
+  <div className="compact-request-main">
+    <div className="compact-request-left">
+      <div className="compact-title-row">
+        <h3>
+          {request.player_first_name} {request.player_last_name}
+        </h3>
 
-                        <p>
-                          Parent: {request.parent_first_name} {request.parent_last_name}
-                        </p>
-                      </div>
+        <span className="compact-parent">
+          Parent: {request.parent_first_name} {request.parent_last_name}
+        </span>
+      </div>
 
-                      <div className="request-actions">
-                        <select
-                          className={`status-select status-${status}`}
-                          value={status}
-                          onChange={(event) =>
-                            updateRequestStatus(request.id, event.target.value)
-                          }
-                        >
-                          {STATUS_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
+      <div className="compact-meta-row">
+        <span>Grade: <strong>{request.grade || "—"}</strong></span>
+        <span>Birth Year: <strong>{request.birth_year || "—"}</strong></span>
+        <span>Position: <strong>{request.position || "—"}</strong></span>
+        <span>
+          Submitted:{" "}
+          <strong>
+            {request.created_at
+              ? new Date(request.created_at).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })
+              : "—"}
+          </strong>
+        </span>
+      </div>
 
-                        <button
-                          className="archive-button"
-                          type="button"
-                          onClick={() => archiveRequest(request.id)}
-                        >
-                          Archive
-                        </button>
+      {request.improvement_goal && (
+        <p className="compact-goal">
+          <strong>Goal:</strong> {request.improvement_goal}
+        </p>
+      )}
 
-                        <button
-                          className="delete-button"
-                          type="button"
-                          onClick={() => deleteRequest(request.id)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
+      <div className="compact-contact-row">
+        <a href={`tel:${request.phone}`}>Call: {request.phone}</a>
+        <a href={`mailto:${request.email}`}>Email: {request.email}</a>
+      </div>
+    </div>
 
-                    <div className="request-details-grid">
-                      <div>
-                        <span>Grade</span>
-                        <strong>{request.grade || "—"}</strong>
-                      </div>
+    <div className="compact-request-actions">
+      <select
+        className={`status-select status-${request.status}`}
+        value={request.status || "new"}
+        onChange={(event) =>
+          updateRequestStatus(request.id, event.target.value)
+        }
+      >
+        <option value="new">New</option>
+        <option value="contacted">Contacted</option>
+        <option value="booked">Booked</option>
+        <option value="completed">Completed</option>
+        <option value="not_interested">Not Interested</option>
+      </select>
 
-                      <div>
-                        <span>Birth Year</span>
-                        <strong>{request.birth_year || "—"}</strong>
-                      </div>
+      <div className="compact-button-row">
+        <button
+          className="archive-button"
+          type="button"
+          onClick={() => archiveRequest(request.id)}
+        >
+          Archive
+        </button>
 
-                      <div>
-                        <span>Position</span>
-                        <strong>{request.position || "—"}</strong>
-                      </div>
-
-                      <div>
-                        <span>Submitted</span>
-                        <strong>{formatDate(request.created_at)}</strong>
-                      </div>
-                    </div>
-
-                    <div className="contact-row">
-                      <a href={`tel:${request.phone}`}>Call: {request.phone}</a>
-                      <a href={`mailto:${request.email}`}>Email: {request.email}</a>
-                    </div>
-
-                    {request.improvement_goal && (
-                      <div className="goal-box">
-                        <span>Improvement Goal</span>
-                        <p>{request.improvement_goal}</p>
-                      </div>
-                    )}
-                  </article>
+        <button
+          className="delete-button"
+          type="button"
+          onClick={() => deleteRequest(request.id)}
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</article>
                 );
               })}
             </div>

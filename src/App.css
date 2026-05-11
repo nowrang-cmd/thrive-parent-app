@@ -1311,3 +1311,154 @@ body,
 .stats-grid {
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)) !important;
 }
+
+/* ================================
+   COMPACT EVALUATION REQUEST CARDS
+================================ */
+
+.compact-request-card {
+  padding: 16px 18px !important;
+  border-radius: 18px !important;
+}
+
+.compact-request-main {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 18px;
+  align-items: center;
+}
+
+.compact-request-left {
+  min-width: 0;
+}
+
+.compact-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.compact-title-row h3 {
+  margin: 0 !important;
+  font-size: 28px !important;
+  line-height: 1 !important;
+  color: #ffffff !important;
+}
+
+.compact-parent {
+  color: #ffffff !important;
+  font-size: 15px !important;
+  font-weight: 600;
+}
+
+.compact-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.compact-meta-row span {
+  color: #b8b8b8 !important;
+  font-size: 13px !important;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.compact-meta-row strong {
+  color: #ffffff !important;
+  font-size: 14px !important;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.compact-goal {
+  margin: 0 0 10px !important;
+  color: #ffffff !important;
+  font-size: 15px !important;
+  line-height: 1.35 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compact-goal strong {
+  color: #C8A44D !important;
+}
+
+.compact-contact-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.compact-contact-row a {
+  color: #050505 !important;
+  background: #C8A44D !important;
+  text-decoration: none;
+  border-radius: 10px;
+  padding: 8px 11px;
+  font-weight: 900;
+  font-size: 14px;
+}
+
+.compact-request-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.compact-request-actions .status-select {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 42px;
+  padding: 8px 10px !important;
+}
+
+.compact-button-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.compact-button-row .archive-button,
+.compact-button-row .delete-button {
+  width: 100%;
+  padding: 9px 10px !important;
+  font-size: 15px !important;
+  border-radius: 10px !important;
+}
+
+/* Hide old tall-card layout pieces if any remain */
+.compact-request-card .request-details-grid,
+.compact-request-card .goal-box,
+.compact-request-card .contact-row {
+  display: none !important;
+}
+
+.requests-list {
+  gap: 10px !important;
+}
+
+/* Mobile: still compact, but stacked cleanly */
+@media (max-width: 820px) {
+  .compact-request-main {
+    grid-template-columns: 1fr;
+  }
+
+  .compact-request-actions {
+    flex-direction: column;
+  }
+
+  .compact-goal {
+    white-space: normal;
+  }
+
+  .compact-title-row h3 {
+    font-size: 24px !important;
+  }
+}
