@@ -100,14 +100,14 @@ async function loadEvaluationRequests() {
 }
 
 async function updateRequestStatus(id, status) {
-const { data, error } = await supabase
-  .from("evaluation_requests")
-  .select("*")
-  .eq("archived", false)
-  .order("created_at", { ascending: false });
+  const { error } = await supabase
+    .from("evaluation_requests")
+    .update({ status })
+    .eq("id", id);
 
   if (error) {
     console.error("Status update error:", error);
+    alert("Status could not be updated. Please try again.");
     return;
   }
 
@@ -132,6 +132,30 @@ async function archiveRequest(id) {
 
   if (error) {
     console.error("Archive error:", error);
+    alert("Request could not be archived. Please try again.");
+    return;
+  }
+
+  setRequests((previous) =>
+    previous.filter((request) => request.id !== id)
+  );
+}
+
+async function deleteRequest(id) {
+  const confirmed = window.confirm(
+    "Delete this evaluation request permanently? This cannot be undone."
+  );
+
+  if (!confirmed) return;
+
+  const { error } = await supabase
+    .from("evaluation_requests")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("Delete error:", error);
+    alert("Request could not be deleted. Please try again.");
     return;
   }
 
@@ -194,12 +218,13 @@ const dashboardStats = {
         position: form.position.trim(),
         improvement_goal: form.improvement_goal.trim(),
         status: "new",
+        archived: false,
       },
     ]);
 
     if (error) {
       console.error("Supabase insert error:", error);
-      setErrorMessage("Something went wrong. Please try again.");
+      setErrorMessage(error.message || "Something went wrong. Please try again.");
       setLoading(false);
       return;
     }
@@ -346,6 +371,14 @@ const dashboardStats = {
     onClick={() => archiveRequest(request.id)}
   >
     Archive
+  </button>
+
+  <button
+    className="delete-button"
+    type="button"
+    onClick={() => deleteRequest(request.id)}
+  >
+    Delete
   </button>
 </div>
                 </div>

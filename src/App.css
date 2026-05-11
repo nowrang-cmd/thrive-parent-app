@@ -1147,3 +1147,51 @@ body,
 .form-card h2 {
   text-shadow: 0 0 24px rgba(200, 164, 77, 0.22) !important;
 }
+
+/* ================================
+   DASHBOARD DELETE BUTTON
+================================ */
+
+.delete-button {
+  border: 1px solid rgba(255, 77, 77, 0.45);
+  background: rgba(255, 77, 77, 0.08);
+  color: #ffb5b5 !important;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 17px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.delete-button:hover {
+  background: rgba(255, 77, 77, 0.16);
+  border-color: rgba(255, 77, 77, 0.75);
+  color: #ffffff !important;
+}
+
+@media (max-width: 920px) {
+  .delete-button {
+    width: 100%;
+  }
+}
+
+/* Keep Archive/Delete action row clean */
+.request-actions .status-select {
+  flex: 1 1 165px;
+}
+
+.request-actions .archive-button,
+.request-actions .delete-button {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 920px) {
+  .request-actions .status-select,
+  .request-actions .archive-button,
+  .request-actions .delete-button {
+    flex: 1 1 100%;
+  }
+}
