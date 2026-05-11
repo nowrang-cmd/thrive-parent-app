@@ -283,7 +283,7 @@ const dashboardStats = {
       <header className="dashboard-header">
         <div>
           <p className="eyebrow">THRiVE Basketball Academy</p>
-          <h1>Intake Dashboard</h1>
+          <h1>EVALUATION REQUEST DASHBOARD</h1>
         </div>
 
         <button className="logout-button" onClick={handleLogout}>
