@@ -391,6 +391,11 @@ function App() {
             <span>Completed</span>
             <strong>{dashboardStats.completed}</strong>
           </div>
+
+          <div className="stat-card">
+            <span>Not Interested</span>
+            <strong>{dashboardStats.not_interested}</strong>
+          </div>
         </section>
 
         <section className="dashboard-tools">

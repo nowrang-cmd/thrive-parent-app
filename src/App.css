@@ -777,7 +777,7 @@ body,
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 14px;
   margin-bottom: 24px;
 }
@@ -1296,4 +1296,18 @@ body,
   .filter-tabs button {
     flex-basis: 100%;
   }
+}
+
+
+/* ================================
+   FINAL DASHBOARD TITLE + GRID SAFETY
+================================ */
+
+.dashboard-header h1,
+.dashboard-login-card h1 {
+  color: #ffffff !important;
+}
+
+.stats-grid {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)) !important;
 }
