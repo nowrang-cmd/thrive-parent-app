@@ -777,7 +777,7 @@ body,
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  grid-template-columns: repeat(5, 1fr);
   gap: 14px;
   margin-bottom: 24px;
 }
@@ -1148,317 +1148,347 @@ body,
   text-shadow: 0 0 24px rgba(200, 164, 77, 0.22) !important;
 }
 
-/* ================================
-   DAVE-STYLE DASHBOARD UPGRADES
-   Search, status tabs, delete button
-================================ */
+/* ======================================================
+   FINAL COMPACT DASHBOARD OVERRIDES
+   Purpose: reduce dead space in the dashboard header,
+   stat cards, search/filter area, and request records.
+   Official THRiVE Gold: #C8A44D
+====================================================== */
+
+:root {
+  --gold: #C8A44D !important;
+  --gold-light: #C8A44D !important;
+}
+
+.dashboard-shell {
+  width: min(1280px, calc(100vw - 40px)) !important;
+  padding: 18px 0 36px !important;
+}
+
+.dashboard-header {
+  min-height: 0 !important;
+  padding: 16px 22px !important;
+  margin-bottom: 12px !important;
+  border-radius: 22px !important;
+  align-items: center !important;
+}
+
+.dashboard-header h1 {
+  font-size: clamp(38px, 4.8vw, 58px) !important;
+  line-height: 0.9 !important;
+  letter-spacing: 1px !important;
+}
+
+.dashboard-header .eyebrow {
+  font-size: 12px !important;
+  margin-bottom: 6px !important;
+  letter-spacing: 2px !important;
+  color: #C8A44D !important;
+}
+
+.logout-button,
+.refresh-button {
+  padding: 8px 13px !important;
+  min-height: 38px !important;
+  border-radius: 12px !important;
+  font-size: 15px !important;
+  color: #C8A44D !important;
+}
+
+.stats-grid {
+  grid-template-columns: repeat(6, 1fr) !important;
+  gap: 10px !important;
+  margin-bottom: 12px !important;
+}
+
+.stat-card {
+  min-height: 76px !important;
+  padding: 11px 12px !important;
+  border-radius: 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.stat-card span {
+  font-size: 11px !important;
+  line-height: 1 !important;
+  margin-bottom: 5px !important;
+  color: #b8b8b8 !important;
+}
+
+.stat-card strong {
+  font-size: 34px !important;
+  line-height: 0.85 !important;
+  margin-top: 0 !important;
+  color: #C8A44D !important;
+}
 
 .dashboard-tools {
-  margin-bottom: 24px;
-  padding: 22px;
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 14px 20px !important;
+  margin-bottom: 12px !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   background:
     radial-gradient(circle at top right, rgba(200, 164, 77, 0.1), transparent 34%),
-    linear-gradient(145deg, rgba(23, 23, 23, 0.98), rgba(5, 5, 5, 0.98));
+    linear-gradient(145deg, rgba(23, 23, 23, 0.98), rgba(5, 5, 5, 0.98)) !important;
 }
 
 .search-box {
-  margin: 0 0 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  margin: 0 !important;
+  gap: 7px !important;
 }
 
 .search-box span {
   color: #C8A44D !important;
-  font-family: "Barlow Condensed", sans-serif;
-  font-size: 15px;
-  font-weight: 900;
-  letter-spacing: 1.4px;
-  text-transform: uppercase;
+  text-transform: uppercase !important;
+  letter-spacing: 1.6px !important;
+  font-family: "Barlow Condensed", sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  text-align: center !important;
 }
 
 .search-box input {
-  min-height: 54px;
-  border-color: rgba(200, 164, 77, 0.35) !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  padding: 9px 14px !important;
+  border-radius: 12px !important;
+  font-size: 15px !important;
+  border-color: rgba(200, 164, 77, 0.45) !important;
 }
 
 .filter-tabs {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin-top: 12px !important;
 }
 
 .filter-tabs button {
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.045);
-  color: #ffffff;
-  border-radius: 999px;
-  padding: 10px 13px;
-  font-family: "Barlow Condensed", sans-serif;
-  font-size: 16px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  min-height: 34px !important;
+  border-radius: 999px !important;
+  padding: 6px 11px !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #ffffff !important;
+  font-family: "Barlow Condensed", sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.8px !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.filter-tabs button.active {
+  border-color: rgba(200, 164, 77, 0.85) !important;
+  background: rgba(200, 164, 77, 0.18) !important;
+  color: #C8A44D !important;
 }
 
 .filter-tabs button span {
-  min-width: 24px;
-  min-height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
+  display: inline-grid !important;
+  place-items: center !important;
+  min-width: 20px !important;
+  height: 20px !important;
+  padding: 0 6px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.12) !important;
   color: #ffffff !important;
-  font-size: 13px;
+  font-size: 11px !important;
+  line-height: 1 !important;
 }
 
-.filter-tabs button:hover,
-.filter-tabs button.active {
-  border-color: rgba(200, 164, 77, 0.75);
-  background: rgba(200, 164, 77, 0.14);
-  color: #C8A44D !important;
+.requests-panel {
+  padding: 18px 20px !important;
+  border-radius: 22px !important;
 }
 
-.filter-tabs button.active span {
-  background: #C8A44D;
-  color: #050505 !important;
+.requests-panel-header {
+  margin-bottom: 12px !important;
+  align-items: center !important;
+}
+
+.requests-panel h2 {
+  font-size: 34px !important;
+  line-height: 0.95 !important;
 }
 
 .results-count {
-  margin: 8px 0 0 !important;
-  color: #b8b8b8 !important;
-  font-size: 15px;
-}
-
-.delete-button {
-  border: 1px solid rgba(255, 77, 77, 0.45);
-  background: rgba(255, 77, 77, 0.08);
-  color: #ffb5b5 !important;
-  border-radius: 12px;
-  padding: 10px 12px;
-  font-family: "Barlow Condensed", sans-serif;
-  font-size: 17px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  cursor: pointer;
-}
-
-.delete-button:hover {
-  border-color: rgba(255, 77, 77, 0.7);
-  background: rgba(255, 77, 77, 0.18);
-  color: #ffffff !important;
-}
-
-.status-select.status-new {
-  border-color: rgba(200, 164, 77, 0.62) !important;
-}
-
-.status-select.status-contacted {
-  border-color: rgba(120, 170, 255, 0.6) !important;
-}
-
-.status-select.status-booked {
-  border-color: rgba(42, 220, 132, 0.6) !important;
-}
-
-.status-select.status-completed {
-  border-color: rgba(200, 164, 77, 0.75) !important;
-}
-
-.status-select.status-not_interested {
-  border-color: rgba(255, 77, 77, 0.45) !important;
-}
-
-@media (max-width: 920px) {
-  .dashboard-tools {
-    padding: 18px;
-  }
-
-  .filter-tabs button {
-    flex: 1 1 calc(50% - 10px);
-    justify-content: center;
-  }
-
-  .delete-button {
-    width: 100%;
-  }
-}
-
-@media (max-width: 560px) {
-  .filter-tabs button {
-    flex-basis: 100%;
-  }
-}
-
-
-/* ================================
-   FINAL DASHBOARD TITLE + GRID SAFETY
-================================ */
-
-.dashboard-header h1,
-.dashboard-login-card h1 {
-  color: #ffffff !important;
-}
-
-.stats-grid {
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)) !important;
-}
-
-/* ================================
-   COMPACT EVALUATION REQUEST CARDS
-================================ */
-
-.compact-request-card {
-  padding: 16px 18px !important;
-  border-radius: 18px !important;
-}
-
-.compact-request-main {
-  display: grid;
-  grid-template-columns: 1fr 280px;
-  gap: 18px;
-  align-items: center;
-}
-
-.compact-request-left {
-  min-width: 0;
-}
-
-.compact-title-row {
-  display: flex;
-  align-items: baseline;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 8px;
-}
-
-.compact-title-row h3 {
-  margin: 0 !important;
-  font-size: 28px !important;
-  line-height: 1 !important;
-  color: #ffffff !important;
-}
-
-.compact-parent {
-  color: #ffffff !important;
-  font-size: 15px !important;
-  font-weight: 600;
-}
-
-.compact-meta-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.compact-meta-row span {
+  margin: 5px 0 0 !important;
   color: #b8b8b8 !important;
   font-size: 13px !important;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.compact-meta-row strong {
-  color: #ffffff !important;
-  font-size: 14px !important;
-  text-transform: none;
-  letter-spacing: 0;
-}
-
-.compact-goal {
-  margin: 0 0 10px !important;
-  color: #ffffff !important;
-  font-size: 15px !important;
-  line-height: 1.35 !important;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.compact-goal strong {
-  color: #C8A44D !important;
-}
-
-.compact-contact-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.compact-contact-row a {
-  color: #050505 !important;
-  background: #C8A44D !important;
-  text-decoration: none;
-  border-radius: 10px;
-  padding: 8px 11px;
-  font-weight: 900;
-  font-size: 14px;
-}
-
-.compact-request-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: stretch;
-}
-
-.compact-request-actions .status-select {
-  width: 100% !important;
-  min-width: 0 !important;
-  height: 42px;
-  padding: 8px 10px !important;
-}
-
-.compact-button-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.compact-button-row .archive-button,
-.compact-button-row .delete-button {
-  width: 100%;
-  padding: 9px 10px !important;
-  font-size: 15px !important;
-  border-radius: 10px !important;
-}
-
-/* Hide old tall-card layout pieces if any remain */
-.compact-request-card .request-details-grid,
-.compact-request-card .goal-box,
-.compact-request-card .contact-row {
-  display: none !important;
 }
 
 .requests-list {
-  gap: 10px !important;
+  gap: 9px !important;
 }
 
-/* Mobile: still compact, but stacked cleanly */
-@media (max-width: 820px) {
-  .compact-request-main {
-    grid-template-columns: 1fr;
+.request-card {
+  padding: 14px 16px !important;
+  border-radius: 16px !important;
+}
+
+.request-top {
+  display: grid !important;
+  grid-template-columns: 1fr 360px !important;
+  align-items: center !important;
+  gap: 14px !important;
+  margin-bottom: 9px !important;
+}
+
+.request-card h3 {
+  font-size: 25px !important;
+  line-height: 0.95 !important;
+}
+
+.request-card p {
+  margin-top: 3px !important;
+  font-size: 14px !important;
+  line-height: 1.2 !important;
+}
+
+.request-actions {
+  display: grid !important;
+  grid-template-columns: 1fr auto auto !important;
+  gap: 8px !important;
+  align-items: center !important;
+}
+
+.status-select {
+  min-width: 0 !important;
+  width: 100% !important;
+  height: 38px !important;
+  padding: 7px 10px !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+}
+
+.archive-button,
+.delete-button {
+  min-height: 38px !important;
+  padding: 7px 10px !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+}
+
+.delete-button {
+  border: 1px solid rgba(255, 77, 77, 0.5) !important;
+  background: rgba(255, 77, 77, 0.08) !important;
+  color: #ffb5b5 !important;
+  font-family: "Barlow Condensed", sans-serif !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  cursor: pointer !important;
+}
+
+.delete-button:hover {
+  background: rgba(255, 77, 77, 0.16) !important;
+  color: #ffffff !important;
+}
+
+.request-details-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  margin-bottom: 8px !important;
+}
+
+.request-details-grid div {
+  padding: 9px 10px !important;
+  border-radius: 12px !important;
+}
+
+.request-details-grid span,
+.goal-box span {
+  font-size: 10px !important;
+  line-height: 1 !important;
+  color: #C8A44D !important;
+}
+
+.request-details-grid strong {
+  margin-top: 3px !important;
+  font-size: 14px !important;
+  line-height: 1.1 !important;
+}
+
+.contact-row {
+  gap: 8px !important;
+  margin-bottom: 8px !important;
+}
+
+.contact-row a {
+  padding: 7px 10px !important;
+  border-radius: 9px !important;
+  font-size: 13px !important;
+  background: #C8A44D !important;
+  color: #050505 !important;
+}
+
+.goal-box {
+  padding: 9px 12px !important;
+  border-radius: 12px !important;
+}
+
+.goal-box p {
+  margin-top: 4px !important;
+  font-size: 14px !important;
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+@media (max-width: 1100px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
   }
 
-  .compact-request-actions {
-    flex-direction: column;
+  .request-top {
+    grid-template-columns: 1fr !important;
   }
 
-  .compact-goal {
-    white-space: normal;
+  .request-actions {
+    grid-template-columns: 1fr auto auto !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .dashboard-shell {
+    width: min(100%, calc(100vw - 20px)) !important;
+    padding-top: 12px !important;
   }
 
-  .compact-title-row h3 {
-    font-size: 24px !important;
+  .dashboard-header {
+    padding: 15px !important;
+    align-items: flex-start !important;
+  }
+
+  .dashboard-header h1 {
+    font-size: 34px !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .stat-card {
+    min-height: 68px !important;
+  }
+
+  .request-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .request-details-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .goal-box p {
+    white-space: normal !important;
   }
 }
