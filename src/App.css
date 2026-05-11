@@ -1149,8 +1149,93 @@ body,
 }
 
 /* ================================
-   DASHBOARD DELETE BUTTON
+   DAVE-STYLE DASHBOARD UPGRADES
+   Search, status tabs, delete button
 ================================ */
+
+.dashboard-tools {
+  margin-bottom: 24px;
+  padding: 22px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    radial-gradient(circle at top right, rgba(200, 164, 77, 0.1), transparent 34%),
+    linear-gradient(145deg, rgba(23, 23, 23, 0.98), rgba(5, 5, 5, 0.98));
+}
+
+.search-box {
+  margin: 0 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.search-box span {
+  color: #C8A44D !important;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+.search-box input {
+  min-height: 54px;
+  border-color: rgba(200, 164, 77, 0.35) !important;
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filter-tabs button {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.045);
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 10px 13px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 16px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-tabs button span {
+  min-width: 24px;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff !important;
+  font-size: 13px;
+}
+
+.filter-tabs button:hover,
+.filter-tabs button.active {
+  border-color: rgba(200, 164, 77, 0.75);
+  background: rgba(200, 164, 77, 0.14);
+  color: #C8A44D !important;
+}
+
+.filter-tabs button.active span {
+  background: #C8A44D;
+  color: #050505 !important;
+}
+
+.results-count {
+  margin: 8px 0 0 !important;
+  color: #b8b8b8 !important;
+  font-size: 15px;
+}
 
 .delete-button {
   border: 1px solid rgba(255, 77, 77, 0.45);
@@ -1167,31 +1252,48 @@ body,
 }
 
 .delete-button:hover {
-  background: rgba(255, 77, 77, 0.16);
-  border-color: rgba(255, 77, 77, 0.75);
+  border-color: rgba(255, 77, 77, 0.7);
+  background: rgba(255, 77, 77, 0.18);
   color: #ffffff !important;
 }
 
+.status-select.status-new {
+  border-color: rgba(200, 164, 77, 0.62) !important;
+}
+
+.status-select.status-contacted {
+  border-color: rgba(120, 170, 255, 0.6) !important;
+}
+
+.status-select.status-booked {
+  border-color: rgba(42, 220, 132, 0.6) !important;
+}
+
+.status-select.status-completed {
+  border-color: rgba(200, 164, 77, 0.75) !important;
+}
+
+.status-select.status-not_interested {
+  border-color: rgba(255, 77, 77, 0.45) !important;
+}
+
 @media (max-width: 920px) {
+  .dashboard-tools {
+    padding: 18px;
+  }
+
+  .filter-tabs button {
+    flex: 1 1 calc(50% - 10px);
+    justify-content: center;
+  }
+
   .delete-button {
     width: 100%;
   }
 }
 
-/* Keep Archive/Delete action row clean */
-.request-actions .status-select {
-  flex: 1 1 165px;
-}
-
-.request-actions .archive-button,
-.request-actions .delete-button {
-  flex: 0 0 auto;
-}
-
-@media (max-width: 920px) {
-  .request-actions .status-select,
-  .request-actions .archive-button,
-  .request-actions .delete-button {
-    flex: 1 1 100%;
+@media (max-width: 560px) {
+  .filter-tabs button {
+    flex-basis: 100%;
   }
 }

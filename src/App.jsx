@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import "./App.css";
 
@@ -6,6 +6,37 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+const STATUS_OPTIONS = [
+  { value: "new", label: "New" },
+  { value: "contacted", label: "Contacted" },
+  { value: "booked", label: "Booked" },
+  { value: "completed", label: "Completed" },
+  { value: "not_interested", label: "Not Interested" },
+];
+
+const STATUS_TABS = [
+  { value: "all", label: "All" },
+  ...STATUS_OPTIONS,
+];
+
+function getStatusLabel(status) {
+  return STATUS_OPTIONS.find((option) => option.value === status)?.label || "New";
+}
+
+function normalizeStatus(status) {
+  return status || "new";
+}
+
+function formatDate(value) {
+  if (!value) return "—";
+
+  return new Date(value).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
 
 function App() {
   const [form, setForm] = useState({
@@ -26,151 +57,195 @@ function App() {
   const [errorMessage, setErrorMessage] = useState("");
 
   const isDashboard =
-  new URLSearchParams(window.location.search).get("dashboard") === "true";
+    new URLSearchParams(window.location.search).get("dashboard") === "true";
 
-const [session, setSession] = useState(null);
-const [loginEmail, setLoginEmail] = useState("");
-const [loginPassword, setLoginPassword] = useState("");
-const [requests, setRequests] = useState([]);
-const [dashboardLoading, setDashboardLoading] = useState(false);
-const [loginError, setLoginError] = useState("");
+  const [session, setSession] = useState(null);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [requests, setRequests] = useState([]);
+  const [dashboardLoading, setDashboardLoading] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [activeStatusFilter, setActiveStatusFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
 
-useEffect(() => {
-  async function getSession() {
+  useEffect(() => {
+    async function getSession() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      setSession(session);
+    }
+
+    getSession();
+
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
 
-    setSession(session);
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (isDashboard && session) {
+      loadEvaluationRequests();
+    }
+  }, [isDashboard, session]);
+
+  async function handleLogin(event) {
+    event.preventDefault();
+    setLoginError("");
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: loginEmail,
+      password: loginPassword,
+    });
+
+    if (error) {
+      setLoginError("Login failed. Check your email and password.");
+    }
   }
 
-  getSession();
-
-  const {
-    data: { subscription },
-  } = supabase.auth.onAuthStateChange((_event, session) => {
-    setSession(session);
-  });
-
-  return () => subscription.unsubscribe();
-}, []);
-
-useEffect(() => {
-  if (isDashboard && session) {
-    loadEvaluationRequests();
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    setSession(null);
   }
-}, [isDashboard, session]);
 
-async function handleLogin(event) {
-  event.preventDefault();
-  setLoginError("");
+  async function loadEvaluationRequests() {
+    setDashboardLoading(true);
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email: loginEmail,
-    password: loginPassword,
-  });
+    const { data, error } = await supabase
+      .from("evaluation_requests")
+      .select("*")
+      .eq("archived", false)
+      .order("created_at", { ascending: false });
 
-  if (error) {
-    setLoginError("Login failed. Check your email and password.");
-  }
-}
+    if (error) {
+      console.error("Dashboard load error:", error);
+      setDashboardLoading(false);
+      return;
+    }
 
-async function handleLogout() {
-  await supabase.auth.signOut();
-  setSession(null);
-}
-
-async function loadEvaluationRequests() {
-  setDashboardLoading(true);
-
-  const { data, error } = await supabase
-    .from("evaluation_requests")
-    .select("*")
-    .eq("archived", false)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Dashboard load error:", error);
+    setRequests(data || []);
     setDashboardLoading(false);
-    return;
   }
 
-  setRequests(data || []);
-  setDashboardLoading(false);
-}
+  async function updateRequestStatus(id, status) {
+    const { error } = await supabase
+      .from("evaluation_requests")
+      .update({ status })
+      .eq("id", id);
 
-async function updateRequestStatus(id, status) {
-  const { error } = await supabase
-    .from("evaluation_requests")
-    .update({ status })
-    .eq("id", id);
+    if (error) {
+      console.error("Status update error:", error);
+      return;
+    }
 
-  if (error) {
-    console.error("Status update error:", error);
-    alert("Status could not be updated. Please try again.");
-    return;
+    setRequests((previous) =>
+      previous.map((request) =>
+        request.id === id ? { ...request, status } : request
+      )
+    );
   }
 
-  setRequests((previous) =>
-    previous.map((request) =>
-      request.id === id ? { ...request, status } : request
-    )
-  );
-}
+  async function archiveRequest(id) {
+    const confirmed = window.confirm(
+      "Archive this evaluation request? It will be hidden from the dashboard but kept in Supabase."
+    );
 
-async function archiveRequest(id) {
-  const confirmed = window.confirm(
-    "Archive this evaluation request? It will be hidden from the dashboard but kept in Supabase."
-  );
+    if (!confirmed) return;
 
-  if (!confirmed) return;
+    const { error } = await supabase
+      .from("evaluation_requests")
+      .update({ archived: true })
+      .eq("id", id);
 
-  const { error } = await supabase
-    .from("evaluation_requests")
-    .update({ archived: true })
-    .eq("id", id);
+    if (error) {
+      console.error("Archive error:", error);
+      return;
+    }
 
-  if (error) {
-    console.error("Archive error:", error);
-    alert("Request could not be archived. Please try again.");
-    return;
+    setRequests((previous) => previous.filter((request) => request.id !== id));
   }
 
-  setRequests((previous) =>
-    previous.filter((request) => request.id !== id)
-  );
-}
+  async function deleteRequest(id) {
+    const confirmed = window.confirm(
+      "Delete this evaluation request permanently? This cannot be undone."
+    );
 
-async function deleteRequest(id) {
-  const confirmed = window.confirm(
-    "Delete this evaluation request permanently? This cannot be undone."
-  );
+    if (!confirmed) return;
 
-  if (!confirmed) return;
+    const { error } = await supabase
+      .from("evaluation_requests")
+      .delete()
+      .eq("id", id);
 
-  const { error } = await supabase
-    .from("evaluation_requests")
-    .delete()
-    .eq("id", id);
+    if (error) {
+      console.error("Delete error:", error);
+      return;
+    }
 
-  if (error) {
-    console.error("Delete error:", error);
-    alert("Request could not be deleted. Please try again.");
-    return;
+    setRequests((previous) => previous.filter((request) => request.id !== id));
   }
 
-  setRequests((previous) =>
-    previous.filter((request) => request.id !== id)
+  const dashboardStats = useMemo(
+    () => ({
+      total: requests.length,
+      new: requests.filter((request) => normalizeStatus(request.status) === "new").length,
+      contacted: requests.filter(
+        (request) => normalizeStatus(request.status) === "contacted"
+      ).length,
+      booked: requests.filter((request) => normalizeStatus(request.status) === "booked").length,
+      completed: requests.filter(
+        (request) => normalizeStatus(request.status) === "completed"
+      ).length,
+      not_interested: requests.filter(
+        (request) => normalizeStatus(request.status) === "not_interested"
+      ).length,
+    }),
+    [requests]
   );
-}
 
-const dashboardStats = {
-  total: requests.length,
-  new: requests.filter((request) => request.status === "new").length,
-  contacted: requests.filter((request) => request.status === "contacted").length,
-  booked: requests.filter((request) => request.status === "booked").length,
-  completed: requests.filter((request) => request.status === "completed").length,
-};
+  const filteredRequests = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+
+    return requests.filter((request) => {
+      const status = normalizeStatus(request.status);
+      const matchesStatus =
+        activeStatusFilter === "all" || status === activeStatusFilter;
+
+      const searchableText = [
+        request.parent_first_name,
+        request.parent_last_name,
+        request.player_first_name,
+        request.player_last_name,
+        request.email,
+        request.phone,
+        request.grade,
+        request.birth_year,
+        request.position,
+        request.improvement_goal,
+        getStatusLabel(status),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      const matchesSearch = !query || searchableText.includes(query);
+
+      return matchesStatus && matchesSearch;
+    });
+  }, [activeStatusFilter, requests, searchTerm]);
+
+  function getTabCount(tabValue) {
+    if (tabValue === "all") return requests.length;
+
+    return requests.filter(
+      (request) => normalizeStatus(request.status) === tabValue
+    ).length;
+  }
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -234,200 +309,232 @@ const dashboardStats = {
   }
 
   if (isDashboard) {
-  if (!session) {
+    if (!session) {
+      return (
+        <main className="page dashboard-page">
+          <section className="dashboard-login-card">
+            <div className="logo-pill">THRiVE Coach Access</div>
+
+            <h1>Evaluation Request Dashboard</h1>
+
+            <p className="confirmation-lead">
+              Log in to view parent/player evaluation requests.
+            </p>
+
+            <form onSubmit={handleLogin} className="dashboard-login-form">
+              <label>
+                Email
+                <input
+                  type="email"
+                  value={loginEmail}
+                  onChange={(event) => setLoginEmail(event.target.value)}
+                  placeholder="coach@email.com"
+                />
+              </label>
+
+              <label>
+                Password
+                <input
+                  type="password"
+                  value={loginPassword}
+                  onChange={(event) => setLoginPassword(event.target.value)}
+                  placeholder="Password"
+                />
+              </label>
+
+              {loginError && <div className="error-box">{loginError}</div>}
+
+              <button className="submit-button" type="submit">
+                Log In
+              </button>
+            </form>
+          </section>
+        </main>
+      );
+    }
+
     return (
-      <main className="page dashboard-page">
-        <section className="dashboard-login-card">
-          <div className="logo-pill">THRiVE Coach Access</div>
+      <main className="dashboard-shell">
+        <header className="dashboard-header">
+          <div>
+            <p className="eyebrow">THRiVE Basketball Academy</p>
+            <h1>Evaluation Request Dashboard</h1>
+          </div>
 
-          <h1>Intake Dashboard</h1>
+          <button className="logout-button" onClick={handleLogout}>
+            Log Out
+          </button>
+        </header>
 
-          <p className="confirmation-lead">
-            Log in to view parent/player evaluation requests.
-          </p>
+        <section className="stats-grid">
+          <div className="stat-card">
+            <span>Total</span>
+            <strong>{dashboardStats.total}</strong>
+          </div>
 
-          <form onSubmit={handleLogin} className="dashboard-login-form">
-            <label>
-              Email
-              <input
-                type="email"
-                value={loginEmail}
-                onChange={(event) => setLoginEmail(event.target.value)}
-                placeholder="coach@email.com"
-              />
-            </label>
+          <div className="stat-card">
+            <span>New</span>
+            <strong>{dashboardStats.new}</strong>
+          </div>
 
-            <label>
-              Password
-              <input
-                type="password"
-                value={loginPassword}
-                onChange={(event) => setLoginPassword(event.target.value)}
-                placeholder="Password"
-              />
-            </label>
+          <div className="stat-card">
+            <span>Contacted</span>
+            <strong>{dashboardStats.contacted}</strong>
+          </div>
 
-            {loginError && <div className="error-box">{loginError}</div>}
+          <div className="stat-card">
+            <span>Booked</span>
+            <strong>{dashboardStats.booked}</strong>
+          </div>
 
-            <button className="submit-button" type="submit">
-              Log In
+          <div className="stat-card">
+            <span>Completed</span>
+            <strong>{dashboardStats.completed}</strong>
+          </div>
+        </section>
+
+        <section className="dashboard-tools">
+          <label className="search-box">
+            <span>Search Requests</span>
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Search player, parent, email, phone, grade, position..."
+            />
+          </label>
+
+          <div className="filter-tabs" aria-label="Filter evaluation requests by status">
+            {STATUS_TABS.map((tab) => (
+              <button
+                key={tab.value}
+                type="button"
+                className={activeStatusFilter === tab.value ? "active" : ""}
+                onClick={() => setActiveStatusFilter(tab.value)}
+              >
+                {tab.label}
+                <span>{getTabCount(tab.value)}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="requests-panel">
+          <div className="requests-panel-header">
+            <div>
+              <p className="eyebrow">Parent / Player Leads</p>
+              <h2>Evaluation Requests</h2>
+              <p className="results-count">
+                Showing {filteredRequests.length} of {requests.length} active requests
+              </p>
+            </div>
+
+            <button className="refresh-button" onClick={loadEvaluationRequests}>
+              Refresh
             </button>
-          </form>
+          </div>
+
+          {dashboardLoading ? (
+            <div className="empty-state">Loading requests...</div>
+          ) : requests.length === 0 ? (
+            <div className="empty-state">No evaluation requests yet.</div>
+          ) : filteredRequests.length === 0 ? (
+            <div className="empty-state">
+              No requests match your current search or filter.
+            </div>
+          ) : (
+            <div className="requests-list">
+              {filteredRequests.map((request) => {
+                const status = normalizeStatus(request.status);
+
+                return (
+                  <article className="request-card" key={request.id}>
+                    <div className="request-top">
+                      <div>
+                        <h3>
+                          {request.player_first_name} {request.player_last_name}
+                        </h3>
+
+                        <p>
+                          Parent: {request.parent_first_name} {request.parent_last_name}
+                        </p>
+                      </div>
+
+                      <div className="request-actions">
+                        <select
+                          className={`status-select status-${status}`}
+                          value={status}
+                          onChange={(event) =>
+                            updateRequestStatus(request.id, event.target.value)
+                          }
+                        >
+                          {STATUS_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+
+                        <button
+                          className="archive-button"
+                          type="button"
+                          onClick={() => archiveRequest(request.id)}
+                        >
+                          Archive
+                        </button>
+
+                        <button
+                          className="delete-button"
+                          type="button"
+                          onClick={() => deleteRequest(request.id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="request-details-grid">
+                      <div>
+                        <span>Grade</span>
+                        <strong>{request.grade || "—"}</strong>
+                      </div>
+
+                      <div>
+                        <span>Birth Year</span>
+                        <strong>{request.birth_year || "—"}</strong>
+                      </div>
+
+                      <div>
+                        <span>Position</span>
+                        <strong>{request.position || "—"}</strong>
+                      </div>
+
+                      <div>
+                        <span>Submitted</span>
+                        <strong>{formatDate(request.created_at)}</strong>
+                      </div>
+                    </div>
+
+                    <div className="contact-row">
+                      <a href={`tel:${request.phone}`}>Call: {request.phone}</a>
+                      <a href={`mailto:${request.email}`}>Email: {request.email}</a>
+                    </div>
+
+                    {request.improvement_goal && (
+                      <div className="goal-box">
+                        <span>Improvement Goal</span>
+                        <p>{request.improvement_goal}</p>
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          )}
         </section>
       </main>
     );
   }
-
-  return (
-    <main className="dashboard-shell">
-      <header className="dashboard-header">
-        <div>
-          <p className="eyebrow">THRiVE Basketball Academy</p>
-          <h1>Intake Dashboard</h1>
-        </div>
-
-        <button className="logout-button" onClick={handleLogout}>
-          Log Out
-        </button>
-      </header>
-
-      <section className="stats-grid">
-        <div className="stat-card">
-          <span>Total</span>
-          <strong>{dashboardStats.total}</strong>
-        </div>
-
-        <div className="stat-card">
-          <span>New</span>
-          <strong>{dashboardStats.new}</strong>
-        </div>
-
-        <div className="stat-card">
-          <span>Contacted</span>
-          <strong>{dashboardStats.contacted}</strong>
-        </div>
-
-        <div className="stat-card">
-          <span>Booked</span>
-          <strong>{dashboardStats.booked}</strong>
-        </div>
-
-        <div className="stat-card">
-          <span>Completed</span>
-          <strong>{dashboardStats.completed}</strong>
-        </div>
-      </section>
-
-      <section className="requests-panel">
-        <div className="requests-panel-header">
-          <div>
-            <p className="eyebrow">Parent / Player Leads</p>
-            <h2>Evaluation Requests</h2>
-          </div>
-
-          <button className="refresh-button" onClick={loadEvaluationRequests}>
-            Refresh
-          </button>
-        </div>
-
-        {dashboardLoading ? (
-          <div className="empty-state">Loading requests...</div>
-        ) : requests.length === 0 ? (
-          <div className="empty-state">No evaluation requests yet.</div>
-        ) : (
-          <div className="requests-list">
-            {requests.map((request) => (
-              <article className="request-card" key={request.id}>
-                <div className="request-top">
-                  <div>
-                    <h3>
-                      {request.player_first_name} {request.player_last_name}
-                    </h3>
-
-                    <p>
-                      Parent: {request.parent_first_name}{" "}
-                      {request.parent_last_name}
-                    </p>
-                  </div>
-
-                 <div className="request-actions">
-  <select
-    className={`status-select status-${request.status}`}
-    value={request.status || "new"}
-    onChange={(event) =>
-      updateRequestStatus(request.id, event.target.value)
-    }
-  >
-    <option value="new">New</option>
-    <option value="contacted">Contacted</option>
-    <option value="booked">Booked</option>
-    <option value="completed">Completed</option>
-    <option value="not_interested">Not Interested</option>
-  </select>
-
-  <button
-    className="archive-button"
-    type="button"
-    onClick={() => archiveRequest(request.id)}
-  >
-    Archive
-  </button>
-
-  <button
-    className="delete-button"
-    type="button"
-    onClick={() => deleteRequest(request.id)}
-  >
-    Delete
-  </button>
-</div>
-                </div>
-
-                <div className="request-details-grid">
-                  <div>
-                    <span>Grade</span>
-                    <strong>{request.grade || "—"}</strong>
-                  </div>
-
-                  <div>
-                    <span>Birth Year</span>
-                    <strong>{request.birth_year || "—"}</strong>
-                  </div>
-
-                  <div>
-                    <span>Position</span>
-                    <strong>{request.position || "—"}</strong>
-                  </div>
-
-                  <div>
-                    <span>Submitted</span>
-                    <strong>
-                      {request.created_at
-                        ? new Date(request.created_at).toLocaleDateString()
-                        : "—"}
-                    </strong>
-                  </div>
-                </div>
-
-                <div className="contact-row">
-                  <a href={`tel:${request.phone}`}>{request.phone}</a>
-                  <a href={`mailto:${request.email}`}>{request.email}</a>
-                </div>
-
-                {request.improvement_goal && (
-                  <div className="goal-box">
-                    <span>Improvement Goal</span>
-                    <p>{request.improvement_goal}</p>
-                  </div>
-                )}
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
-    </main>
-  );
-}
 
   if (submitted) {
     return (
@@ -490,18 +597,19 @@ const dashboardStats = {
   return (
     <main className="page">
       <section className="hero-panel">
-<div className="hero-logo-wrap">
-  <img
-    src="/thrive-logo.png"
-    alt="THRiVE Basketball Academy"
-    className="hero-logo"
-  />
-</div>
+        <div className="hero-logo-wrap">
+          <img
+            src="/thrive-logo.png"
+            alt="THRiVE Basketball Academy"
+            className="hero-logo"
+          />
+        </div>
 
-<div className="hero-title-block">
-  <p className="eyebrow">THRiVE Basketball Academy</p>
-  <h1>Start Your Player Evaluation</h1>
-</div>
+        <div className="hero-title-block">
+          <p className="eyebrow">THRiVE Basketball Academy</p>
+          <h1>Start Your Player Evaluation</h1>
+        </div>
+
         <p className="hero-copy">
           Every THRiVE athlete begins with an evaluation. Tell us about your
           player and we’ll send evaluation details, available next steps, and
