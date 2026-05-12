@@ -1,824 +1,206 @@
-import { useEffect, useMemo, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
-import "./App.css";
+import React, { useState } from "react";
+import { Send, CheckCircle2, ShieldCheck } from "lucide-react";
+import { supabase } from "./supabase";
+import "./styles.css";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const EMPTY_FORM = {
+  athlete_first_name: "",
+  athlete_last_name: "",
+  grade: "",
+  birth_year: "",
+  position: "",
+  school: "",
+  parent_first_name: "",
+  parent_last_name: "",
+  parent_email: "",
+  parent_phone: "",
+  years_of_experience: "",
+  highest_level_played: "",
+  improvement_goals: ""
+};
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-const STATUS_OPTIONS = [
-  { value: "new", label: "New" },
-  { value: "contacted", label: "Contacted" },
-  { value: "booked", label: "Booked" },
-  { value: "completed", label: "Completed" },
-  { value: "not_interested", label: "Not Interested" },
-];
-
-const FILTER_OPTIONS = [{ value: "all", label: "All" }, ...STATUS_OPTIONS];
-
-function getGradeNumber(grade) {
-  if (!grade) return 999;
-  const match = String(grade).match(/\d+/);
-  if (match) return Number(match[0]);
-  if (String(grade).toLowerCase().includes("post")) return 13;
-  return 999;
-}
-
-function formatDate(value) {
-  if (!value) return "—";
-
-  return new Date(value).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function App() {
-  const [form, setForm] = useState({
-    parent_first_name: "",
-    parent_last_name: "",
-    email: "",
-    phone: "",
-    player_first_name: "",
-    player_last_name: "",
-    grade: "",
-    birth_year: "",
-    position: "",
-    improvement_goal: "",
-  });
-
-  const [loading, setLoading] = useState(false);
+export default function App() {
+  const [formData, setFormData] = useState(EMPTY_FORM);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  const isDashboard =
-    new URLSearchParams(window.location.search).get("dashboard") === "true";
-
-  const [session, setSession] = useState(null);
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [requests, setRequests] = useState([]);
-  const [dashboardLoading, setDashboardLoading] = useState(false);
-  const [loginError, setLoginError] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("created_at");
-  const [sortDirection, setSortDirection] = useState("desc");
-
-  useEffect(() => {
-    async function getSession() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      setSession(session);
-    }
-
-    getSession();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (isDashboard && session) {
-      loadEvaluationRequests();
-    }
-  }, [isDashboard, session]);
-
-  async function handleLogin(event) {
-    event.preventDefault();
-    setLoginError("");
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email: loginEmail,
-      password: loginPassword,
-    });
-
-    if (error) {
-      setLoginError("Login failed. Check your email and password.");
-    }
-  }
-
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    setSession(null);
-  }
-
-  async function loadEvaluationRequests() {
-    setDashboardLoading(true);
-
-    const { data, error } = await supabase
-      .from("evaluation_requests")
-      .select("*")
-      .eq("archived", false)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Dashboard load error:", error);
-      setDashboardLoading(false);
-      return;
-    }
-
-    setRequests(data || []);
-    setDashboardLoading(false);
-  }
-
-  async function updateRequestStatus(id, status) {
-    const { error } = await supabase
-      .from("evaluation_requests")
-      .update({ status })
-      .eq("id", id);
-
-    if (error) {
-      console.error("Status update error:", error);
-      return;
-    }
-
-    setRequests((previous) =>
-      previous.map((request) =>
-        request.id === id ? { ...request, status } : request
-      )
-    );
-  }
-
-  async function archiveRequest(id) {
-    const confirmed = window.confirm(
-      "Archive this evaluation request? It will be hidden from the dashboard but kept in Supabase."
-    );
-
-    if (!confirmed) return;
-
-    const { error } = await supabase
-      .from("evaluation_requests")
-      .update({ archived: true })
-      .eq("id", id);
-
-    if (error) {
-      console.error("Archive error:", error);
-      return;
-    }
-
-    setRequests((previous) => previous.filter((request) => request.id !== id));
-  }
-
-  async function deleteRequest(id) {
-    const confirmed = window.confirm(
-      "Delete this evaluation request permanently? This cannot be undone."
-    );
-
-    if (!confirmed) return;
-
-    const { error } = await supabase
-      .from("evaluation_requests")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      console.error("Delete error:", error);
-      return;
-    }
-
-    setRequests((previous) => previous.filter((request) => request.id !== id));
-  }
-
-  const dashboardStats = {
-    total: requests.length,
-    new: requests.filter((request) => request.status === "new").length,
-    contacted: requests.filter((request) => request.status === "contacted").length,
-    booked: requests.filter((request) => request.status === "booked").length,
-    completed: requests.filter((request) => request.status === "completed").length,
-    not_interested: requests.filter(
-      (request) => request.status === "not_interested"
-    ).length,
-  };
-
-  const visibleRequests = useMemo(() => {
-    const search = searchTerm.trim().toLowerCase();
-
-    const filtered = requests.filter((request) => {
-      const status = request.status || "new";
-      const matchesStatus = statusFilter === "all" || status === statusFilter;
-
-      const searchableText = [
-        request.player_first_name,
-        request.player_last_name,
-        request.parent_first_name,
-        request.parent_last_name,
-        request.email,
-        request.phone,
-        request.grade,
-        request.birth_year,
-        request.position,
-        request.improvement_goal,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      const matchesSearch = !search || searchableText.includes(search);
-
-      return matchesStatus && matchesSearch;
-    });
-
-    return [...filtered].sort((a, b) => {
-      let aValue;
-      let bValue;
-
-      if (sortBy === "grade") {
-        aValue = getGradeNumber(a.grade);
-        bValue = getGradeNumber(b.grade);
-      } else if (sortBy === "birth_year") {
-        aValue = Number(a.birth_year) || 9999;
-        bValue = Number(b.birth_year) || 9999;
-      } else if (sortBy === "position") {
-        aValue = String(a.position || "").toLowerCase();
-        bValue = String(b.position || "").toLowerCase();
-      } else {
-        aValue = new Date(a.created_at || 0).getTime();
-        bValue = new Date(b.created_at || 0).getTime();
-      }
-
-      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
-      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
-      return 0;
-    });
-  }, [requests, searchTerm, statusFilter, sortBy, sortDirection]);
 
   function handleChange(event) {
     const { name, value } = event.target;
-
-    setForm((previous) => ({
-      ...previous,
-      [name]: value,
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   }
 
-  async function handleSubmit(event) {
+  async function submitEvaluationRequest(event) {
     event.preventDefault();
-    setLoading(true);
-    setErrorMessage("");
+    setSaving(true);
+    setMessage("");
 
     const requiredFields = [
+      "athlete_first_name",
+      "athlete_last_name",
+      "grade",
+      "birth_year",
+      "position",
       "parent_first_name",
       "parent_last_name",
-      "email",
-      "phone",
-      "player_first_name",
-      "player_last_name",
-      "grade",
-      "position",
+      "parent_email",
+      "parent_phone"
     ];
 
-    const missingField = requiredFields.find((field) => !form[field].trim());
-
-    if (missingField) {
-      setErrorMessage("Please complete all required fields.");
-      setLoading(false);
+    const missing = requiredFields.find(field => !String(formData[field] || "").trim());
+    if (missing) {
+      setSaving(false);
+      setMessage("Please complete all required fields before submitting.");
       return;
     }
 
-    const { error } = await supabase.from("evaluation_requests").insert([
-      {
-        parent_first_name: form.parent_first_name.trim(),
-        parent_last_name: form.parent_last_name.trim(),
-        email: form.email.trim(),
-        phone: form.phone.trim(),
-        player_first_name: form.player_first_name.trim(),
-        player_last_name: form.player_last_name.trim(),
-        grade: form.grade.trim(),
-        birth_year: form.birth_year.trim(),
-        position: form.position.trim(),
-        improvement_goal: form.improvement_goal.trim(),
-        status: "new",
-        archived: false,
-      },
-    ]);
+    const payload = {
+      athlete_first_name: formData.athlete_first_name.trim(),
+      athlete_last_name: formData.athlete_last_name.trim(),
+      athlete_last_name_1: formData.athlete_last_name.trim(),
+      grade: formData.grade,
+      dropdown_90c5: formData.grade,
+      birth_year: formData.birth_year.trim(),
+      position: formData.position,
+      school: formData.school.trim(),
+      parent_first_name: formData.parent_first_name.trim(),
+      parent_last_name: formData.parent_last_name.trim(),
+      parent_email: formData.parent_email.trim(),
+      email_1a31: formData.parent_email.trim(),
+      parent_phone: formData.parent_phone.trim(),
+      phone_7aeb: formData.parent_phone.trim(),
+      years_of_experience: formData.years_of_experience.trim(),
+      highest_level_played: formData.highest_level_played.trim(),
+      improvement_goals: formData.improvement_goals.trim(),
+      what_does_the_athlete_want_to_improve: formData.improvement_goals.trim(),
+      status: "new",
+      payment_status: "unpaid"
+    };
+
+    const { error } = await supabase.from("evaluation_submissions").insert([payload]);
+
+    setSaving(false);
 
     if (error) {
-      console.error("Supabase insert error:", error);
-      setErrorMessage(error.message || "Something went wrong. Please try again.");
-      setLoading(false);
+      setMessage(`Could not submit request: ${error.message}`);
       return;
     }
 
     setSubmitted(true);
-    setLoading(false);
-  }
-
-  if (isDashboard) {
-    if (!session) {
-      return (
-        <main className="page dashboard-page">
-          <section className="dashboard-login-card">
-            <div className="logo-pill">THRiVE Coach Access</div>
-
-            <h1>Evaluation Request Dashboard</h1>
-
-            <p className="confirmation-lead">
-              Log in to view parent/player evaluation requests.
-            </p>
-
-            <form onSubmit={handleLogin} className="dashboard-login-form">
-              <label>
-                Email
-                <input
-                  type="email"
-                  value={loginEmail}
-                  onChange={(event) => setLoginEmail(event.target.value)}
-                  placeholder="coach@email.com"
-                />
-              </label>
-
-              <label>
-                Password
-                <input
-                  type="password"
-                  value={loginPassword}
-                  onChange={(event) => setLoginPassword(event.target.value)}
-                  placeholder="Password"
-                />
-              </label>
-
-              {loginError && <div className="error-box">{loginError}</div>}
-
-              <button className="submit-button" type="submit">
-                Log In
-              </button>
-            </form>
-          </section>
-        </main>
-      );
-    }
-
-    return (
-      <main className="dashboard-shell">
-        <header className="dashboard-header compact-dashboard-header">
-          <div>
-            <p className="eyebrow">THRiVE Basketball Academy</p>
-            <h1>Evaluation Request Dashboard</h1>
-          </div>
-
-          <button className="logout-button" onClick={handleLogout}>
-            Log Out
-          </button>
-        </header>
-
-        <section className="stats-grid compact-stats-grid">
-          <div className="stat-card">
-            <span>Total</span>
-            <strong>{dashboardStats.total}</strong>
-          </div>
-
-          <div className="stat-card">
-            <span>New</span>
-            <strong>{dashboardStats.new}</strong>
-          </div>
-
-          <div className="stat-card">
-            <span>Contacted</span>
-            <strong>{dashboardStats.contacted}</strong>
-          </div>
-
-          <div className="stat-card">
-            <span>Booked</span>
-            <strong>{dashboardStats.booked}</strong>
-          </div>
-
-          <div className="stat-card">
-            <span>Completed</span>
-            <strong>{dashboardStats.completed}</strong>
-          </div>
-
-          <div className="stat-card">
-            <span>Not Interested</span>
-            <strong>{dashboardStats.not_interested}</strong>
-          </div>
-        </section>
-
-        <section className="dashboard-tools compact-dashboard-tools">
-          <label className="dashboard-tool-field dashboard-search-field">
-            Search Requests
-            <input
-              className="search-box"
-              type="search"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Search player, parent, email, phone, grade, position..."
-            />
-          </label>
-
-          <div className="sort-row">
-            <label className="dashboard-tool-field sort-field">
-              Sort By
-              <select
-                value={sortBy}
-                onChange={(event) => setSortBy(event.target.value)}
-              >
-                <option value="created_at">Submitted Date</option>
-                <option value="grade">Grade</option>
-                <option value="birth_year">Birth Year</option>
-                <option value="position">Position</option>
-              </select>
-            </label>
-
-            <button
-              className="sort-direction-button"
-              type="button"
-              onClick={() =>
-                setSortDirection((previous) =>
-                  previous === "asc" ? "desc" : "asc"
-                )
-              }
-            >
-              {sortDirection === "asc" ? "Ascending" : "Descending"}
-            </button>
-          </div>
-
-          <div className="filter-tabs">
-            {FILTER_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                className={`filter-tab ${
-                  statusFilter === option.value ? "active" : ""
-                }`}
-                onClick={() => setStatusFilter(option.value)}
-              >
-                {option.label}
-                <span>
-                  {option.value === "all"
-                    ? dashboardStats.total
-                    : dashboardStats[option.value] || 0}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          <p className="results-count">
-            Showing {visibleRequests.length} of {requests.length} active requests
-          </p>
-        </section>
-
-        <section className="requests-panel compact-requests-panel">
-          <div className="requests-panel-header">
-            <div>
-              <p className="eyebrow">Parent / Player Leads</p>
-              <h2>Evaluation Requests</h2>
-            </div>
-
-            <button className="refresh-button" onClick={loadEvaluationRequests}>
-              Refresh
-            </button>
-          </div>
-
-          {dashboardLoading ? (
-            <div className="empty-state">Loading requests...</div>
-          ) : requests.length === 0 ? (
-            <div className="empty-state">No evaluation requests yet.</div>
-          ) : visibleRequests.length === 0 ? (
-            <div className="empty-state">No requests match your current filters.</div>
-          ) : (
-            <div className="requests-list compact-requests-list">
-              {visibleRequests.map((request) => (
-                <article className="request-card compact-request-card" key={request.id}>
-                  <div className="compact-request-main">
-                    <div className="compact-request-left">
-                      <div className="compact-title-row">
-                        <h3>
-                          {request.player_first_name} {request.player_last_name}
-                        </h3>
-
-                        <span className="compact-parent">
-                          Parent: {request.parent_first_name} {request.parent_last_name}
-                        </span>
-                      </div>
-
-                      <div className="compact-meta-row">
-                        <span>
-                          Grade: <strong>{request.grade || "—"}</strong>
-                        </span>
-                        <span>
-                          Birth Year: <strong>{request.birth_year || "—"}</strong>
-                        </span>
-                        <span>
-                          Position: <strong>{request.position || "—"}</strong>
-                        </span>
-                        <span>
-                          Submitted: <strong>{formatDate(request.created_at)}</strong>
-                        </span>
-                      </div>
-
-                      {request.improvement_goal && (
-                        <p className="compact-goal">
-                          <strong>Goal:</strong> {request.improvement_goal}
-                        </p>
-                      )}
-
-                      <div className="compact-contact-row">
-                        <a href={`tel:${request.phone}`}>Call: {request.phone}</a>
-                        <a href={`mailto:${request.email}`}>Email: {request.email}</a>
-                      </div>
-                    </div>
-
-                    <div className="compact-request-actions">
-                      <select
-                        className={`status-select status-${request.status}`}
-                        value={request.status || "new"}
-                        onChange={(event) =>
-                          updateRequestStatus(request.id, event.target.value)
-                        }
-                      >
-                        {STATUS_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-
-                      <div className="compact-button-row">
-                        <button
-                          className="archive-button"
-                          type="button"
-                          onClick={() => archiveRequest(request.id)}
-                        >
-                          Archive
-                        </button>
-
-                        <button
-                          className="delete-button"
-                          type="button"
-                          onClick={() => deleteRequest(request.id)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-      </main>
-    );
-  }
-
-  if (submitted) {
-    return (
-      <main className="page">
-        <section className="confirmation-card">
-          <div className="logo-pill">THRiVE Basketball Academy</div>
-
-          <h1>You’re on the THRiVE Evaluation List</h1>
-
-          <p className="confirmation-lead">
-            Thanks — we received your request. A THRiVE coach will follow up
-            with evaluation details, available next steps, and how the player
-            development pathway works.
-          </p>
-
-          <div className="next-box">
-            <h2>What happens next?</h2>
-
-            <div className="step">
-              <span>1</span>
-              <p>We review your player’s information.</p>
-            </div>
-
-            <div className="step">
-              <span>2</span>
-              <p>We recommend the right evaluation or training pathway.</p>
-            </div>
-
-            <div className="step">
-              <span>3</span>
-              <p>You receive booking details and next steps.</p>
-            </div>
-
-            <div className="step">
-              <span>4</span>
-              <p>Your player begins with a clear development plan.</p>
-            </div>
-          </div>
-
-          <div className="confirmation-actions">
-            <a className="primary-link" href="https://www.thrivebasketball.org/">
-              Visit THRiVE Website
-            </a>
-
-            <a
-              className="secondary-link"
-              href="https://www.thrivebasketball.org/copy-of-evaluation"
-            >
-              Book $20 Evaluation Now
-            </a>
-          </div>
-        </section>
-      </main>
-    );
+    setFormData(EMPTY_FORM);
+    setMessage("Your THRiVE evaluation request has been submitted. We will contact you as evaluation groups are organized.");
   }
 
   return (
-    <main className="page">
-      <section className="hero-panel">
-        <div className="hero-logo-wrap">
-          <img
-            src="/thrive-logo.png"
-            alt="THRiVE Basketball Academy"
-            className="hero-logo"
-          />
+    <main className="parentApp">
+      <section className="parentHero">
+        <div className="parentBrand">
+          <img src="/thrive-logo.png" alt="THRiVE Basketball Academy" />
+          <div>
+            <strong>THRiVE</strong>
+            <span>Basketball Academy</span>
+          </div>
         </div>
 
-        <div className="hero-title-block">
-          <p className="eyebrow">THRiVE Basketball Academy</p>
-          <h1>Start Your Player Evaluation</h1>
+        <div className="heroCopy">
+          <span>Player Evaluation Request</span>
+          <h1>Start the Evaluation Process</h1>
+          <p>Submit your athlete’s information and THRiVE will place them into the right evaluation pathway based on age, skill, and development needs.</p>
         </div>
 
-        <p className="hero-copy">
-          Every THRiVE athlete begins with an evaluation. Tell us about your
-          player and we’ll send evaluation details, available next steps, and
-          how THRiVE can help your player develop.
-        </p>
-
-        <div className="trust-grid">
-          <div>
-            <strong>Evaluation-Based</strong>
-            <span>Clear player pathway</span>
-          </div>
-
-          <div>
-            <strong>Coach Reviewed</strong>
-            <span>Real feedback, not guesswork</span>
-          </div>
-
-          <div>
-            <strong>No Payment Today</strong>
-            <span>Request info first</span>
-          </div>
+        <div className="heroTrust">
+          <ShieldCheck size={18} />
+          <span>Private intake form · Coach reviewed · Evaluation pathway</span>
         </div>
       </section>
 
-      <section className="form-card">
-        <div className="form-header">
-          <p className="eyebrow">Parent / Player Info</p>
-          <h2>Request Evaluation Info</h2>
-          <p>
-            Complete this short form and THRiVE will follow up with evaluation
-            information.
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          <div className="section-title">Parent / Guardian</div>
-
-          <div className="field-grid">
-            <label>
-              Parent First Name *
-              <input
-                type="text"
-                name="parent_first_name"
-                value={form.parent_first_name}
-                onChange={handleChange}
-                placeholder="Parent first name"
-              />
-            </label>
-
-            <label>
-              Parent Last Name *
-              <input
-                type="text"
-                name="parent_last_name"
-                value={form.parent_last_name}
-                onChange={handleChange}
-                placeholder="Parent last name"
-              />
-            </label>
+      <section className="formShell">
+        {submitted && (
+          <div className="successCard">
+            <CheckCircle2 size={22} />
+            <div>
+              <strong>Request received</strong>
+              <span>Thank you. THRiVE will follow up as evaluation sessions are organized.</span>
+            </div>
           </div>
+        )}
 
-          <div className="field-grid">
-            <label>
-              Email *
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="parent@email.com"
-              />
-            </label>
+        {message && <div className={submitted ? "formMessage success" : "formMessage"}>{message}</div>}
 
-            <label>
-              Phone *
-              <input
-                type="tel"
-                name="phone"
-                value={form.phone}
-                onChange={handleChange}
-                placeholder="204-000-0000"
-              />
-            </label>
-          </div>
+        <form className="requestForm" onSubmit={submitEvaluationRequest}>
+          <FormSection title="Athlete Information" />
+          <div className="formGrid">
+            <Field label="Athlete First Name" name="athlete_first_name" value={formData.athlete_first_name} onChange={handleChange} required />
+            <Field label="Athlete Last Name" name="athlete_last_name" value={formData.athlete_last_name} onChange={handleChange} required />
 
-          <div className="section-title">Player</div>
-
-          <div className="field-grid">
-            <label>
-              Player First Name *
-              <input
-                type="text"
-                name="player_first_name"
-                value={form.player_first_name}
-                onChange={handleChange}
-                placeholder="Player first name"
-              />
-            </label>
-
-            <label>
-              Player Last Name *
-              <input
-                type="text"
-                name="player_last_name"
-                value={form.player_last_name}
-                onChange={handleChange}
-                placeholder="Player last name"
-              />
-            </label>
-          </div>
-
-          <div className="field-grid three">
-            <label>
-              Grade *
-              <select name="grade" value={form.grade} onChange={handleChange}>
-                <option value="">Select grade</option>
-                <option value="Grade 4">Grade 4</option>
-                <option value="Grade 5">Grade 5</option>
-                <option value="Grade 6">Grade 6</option>
-                <option value="Grade 7">Grade 7</option>
-                <option value="Grade 8">Grade 8</option>
-                <option value="Grade 9">Grade 9</option>
-                <option value="Grade 10">Grade 10</option>
-                <option value="Grade 11">Grade 11</option>
-                <option value="Grade 12">Grade 12</option>
-                <option value="Post-Secondary">Post-Secondary</option>
+            <div className="field">
+              <label>Evaluation Group / Age Level *</label>
+              <select name="grade" value={formData.grade} onChange={handleChange} required>
+                <option value="">Select Evaluation Group</option>
+                <option value="Grade 5/6">Grade 5/6</option>
+                <option value="Grade 7/8">Grade 7/8</option>
+                <option value="Grade 9/10">Grade 9/10</option>
+                <option value="Grade 11/12/Prep/U1">Grade 11/12/Prep/U1</option>
               </select>
-            </label>
+            </div>
 
-            <label>
-              Birth Year
-              <input
-                type="text"
-                name="birth_year"
-                value={form.birth_year}
-                onChange={handleChange}
-                placeholder="Example: 2011"
-              />
-            </label>
+            <Field label="Birth Year" name="birth_year" value={formData.birth_year} onChange={handleChange} placeholder="2010" required />
 
-            <label>
-              Position *
-              <select name="position" value={form.position} onChange={handleChange}>
-                <option value="">Select position</option>
+            <div className="field">
+              <label>Position *</label>
+              <select name="position" value={formData.position} onChange={handleChange} required>
+                <option value="">Select Position</option>
                 <option value="Guard">Guard</option>
                 <option value="Forward">Forward</option>
                 <option value="Post">Post</option>
-                <option value="Unsure">Unsure</option>
               </select>
-            </label>
+            </div>
+
+            <Field label="School" name="school" value={formData.school} onChange={handleChange} />
           </div>
 
-          <label>
-            What does your player want to improve?
+          <FormSection title="Parent / Guardian Information" />
+          <div className="formGrid">
+            <Field label="Parent First Name" name="parent_first_name" value={formData.parent_first_name} onChange={handleChange} required />
+            <Field label="Parent Last Name" name="parent_last_name" value={formData.parent_last_name} onChange={handleChange} required />
+            <Field label="Parent Email" type="email" name="parent_email" value={formData.parent_email} onChange={handleChange} required />
+            <Field label="Parent Phone" type="tel" name="parent_phone" value={formData.parent_phone} onChange={handleChange} required />
+          </div>
+
+          <FormSection title="Basketball Background" />
+          <div className="formGrid">
+            <Field label="Years of Experience" name="years_of_experience" value={formData.years_of_experience} onChange={handleChange} />
+            <Field label="Highest Level Played" name="highest_level_played" value={formData.highest_level_played} onChange={handleChange} />
+          </div>
+
+          <div className="field full">
+            <label>What does the athlete want to improve?</label>
             <textarea
-              name="improvement_goal"
-              value={form.improvement_goal}
+              name="improvement_goals"
+              value={formData.improvement_goals}
               onChange={handleChange}
-              placeholder="Example: shooting, ball handling, confidence, defense, making a team, basketball IQ..."
-              rows="4"
+              placeholder="Example: shooting confidence, ball handling, finishing, defensive footwork, decision-making..."
             />
-          </label>
+          </div>
 
-          {errorMessage && <div className="error-box">{errorMessage}</div>}
-
-          <button className="submit-button" type="submit" disabled={loading}>
-            {loading ? "Sending..." : "Request Evaluation Info"}
+          <button className="submitBtn" disabled={saving}>
+            <Send size={18} /> {saving ? "Submitting..." : "Submit Evaluation Request"}
           </button>
-
-          <p className="payment-note">
-            No payment is required to request information. The $20 evaluation
-            fee only applies when you officially book your player evaluation.
-          </p>
         </form>
       </section>
     </main>
   );
 }
 
-export default App;
+function FormSection({ title }) {
+  return <h2 className="sectionTitle">{title}</h2>;
+}
+
+function Field({ label, name, value, onChange, type = "text", placeholder = "", required = false }) {
+  return (
+    <div className="field">
+      <label>{label}{required ? " *" : ""}</label>
+      <input type={type} name={name} value={value} onChange={onChange} placeholder={placeholder} required={required} />
+    </div>
+  );
+}
