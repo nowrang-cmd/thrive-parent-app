@@ -58,7 +58,6 @@ export default function App() {
       athlete_first_name: formData.athlete_first_name.trim(),
       athlete_last_name: formData.athlete_last_name.trim(),
       grade: formData.grade,
-      dropdown_90c5: formData.grade,
       birth_year: formData.birth_year.trim(),
       position: formData.position,
       school: formData.school.trim(),
