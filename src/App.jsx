@@ -69,10 +69,13 @@ export default function App() {
       highest_level_played: formData.highest_level_played.trim(),
       improvement_goals: formData.improvement_goals.trim(),
       what_does_the_athlete_want_to_improve: formData.improvement_goals.trim(),
-      status: "new"
+      status: "evaluation_complete",
+      submitted_from: "thrive_parent_app",
+      submitted_origin: window.location.origin,
+      parent_app_submitted_at: new Date().toISOString()
     };
 
-    const { error } = await supabase.from("evaluation_requests").insert([payload]);
+    const { error } = await supabase.from("evaluation_submissions").insert([payload]);
 
     setSaving(false);
 
@@ -83,7 +86,7 @@ export default function App() {
 
     setSubmitted(true);
     setFormData(EMPTY_FORM);
-    setMessage("Your THRiVE evaluation request has been submitted. We will contact you as evaluation groups are organized.");
+    setMessage("Your THRiVE evaluation information has been submitted. THRiVE coaches will review it in the Processing area.");
   }
 
   return (
