@@ -12,9 +12,17 @@ export const config = {
 
 function clean(value, maxLength = 2000) {
   return String(value ?? '')
-    .replace(/\u0000/g, '')
+    .replaceAll(String.fromCharCode(0), '')
     .trim()
     .slice(0, maxLength)
+}
+
+function parseJson(raw) {
+  try {
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
 }
 
 async function readRawBody(req) {
@@ -111,13 +119,7 @@ async function updateSubmission(submissionId, payload) {
   )
 
   const raw = await response.text()
-  let data = null
-
-  try {
-    data = raw ? JSON.parse(raw) : null
-  } catch {
-    data = null
-  }
+  const data = parseJson(raw)
 
   if (!response.ok) {
     console.error('THRiVE Stripe webhook Supabase update failed:', response.status, raw)
@@ -176,10 +178,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid Stripe signature.' })
   }
 
-  let event
-  try {
-    event = JSON.parse(rawBody.toString('utf8'))
-  } catch {
+  const event = parseJson(rawBody.toString('utf8'))
+  if (!event) {
     return res.status(400).json({ error: 'Invalid Stripe event payload.' })
   }
 
