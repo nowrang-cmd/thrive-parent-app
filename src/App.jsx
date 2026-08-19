@@ -1,204 +1,816 @@
-import React, { useState } from "react";
-import { Send, CheckCircle2, ShieldCheck } from "lucide-react";
-import { supabase } from "./supabase";
-import "./styles.css";
+import { useMemo, useState } from 'react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CheckCircle2,
+  CircleDollarSign,
+  Clock3,
+  CreditCard,
+  LockKeyhole,
+  ShieldCheck,
+  Sparkles,
+  UserRound,
+  UsersRound,
+} from 'lucide-react'
+import './styles.css'
 
-const EMPTY_FORM = {
-  athlete_first_name: "",
-  athlete_last_name: "",
-  grade: "",
-  birth_year: "",
-  position: "",
-  school: "",
-  parent_first_name: "",
-  parent_last_name: "",
-  parent_email: "",
-  parent_phone: "",
-  years_of_experience: "",
-  highest_level_played: "",
-  improvement_goals: ""
-};
+const EVALUATION_FEE = 30
+
+const gradeOptions = [
+  'Grade 4',
+  'Grade 5',
+  'Grade 6',
+  'Grade 7',
+  'Grade 8',
+  'Grade 9',
+  'Grade 10',
+  'Grade 11',
+  'Grade 12',
+  'Prep / College / University',
+  'Other',
+]
+
+const positionOptions = [
+  'Guard',
+  'Wing',
+  'Forward',
+  'Post',
+  'Multiple Positions',
+  'Not Sure',
+]
+
+const initialForm = {
+  athleteFirstName: '',
+  athleteLastName: '',
+  athleteEmail: '',
+  birthYear: '',
+  grade: '',
+  position: '',
+  school: '',
+  parentFirstName: '',
+  parentLastName: '',
+  parentEmail: '',
+  parentPhone: '',
+  yearsExperience: '',
+  highestLevelPlayed: '',
+  improvementGoals: '',
+  notes: '',
+  paymentChoice: 'pay_now',
+  informationConfirmed: false,
+  evaluationAcknowledged: false,
+  communicationConsent: false,
+  website: '',
+}
+
+const birthYears = Array.from(
+  { length: 24 },
+  (_, index) => String(new Date().getFullYear() - 7 - index)
+)
+
+function getQueryState() {
+  if (typeof window === 'undefined') return { payment: '', submissionId: '' }
+
+  const params = new URLSearchParams(window.location.search)
+  return {
+    payment: params.get('payment') || '',
+    submissionId: params.get('submission_id') || '',
+  }
+}
 
 export default function App() {
-  const [formData, setFormData] = useState(EMPTY_FORM);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const queryState = useMemo(getQueryState, [])
+  const [form, setForm] = useState(initialForm)
+  const [status, setStatus] = useState('idle')
+  const [message, setMessage] = useState('')
+  const [submittedAthlete, setSubmittedAthlete] = useState('')
 
-  function handleChange(event) {
-    const { name, value } = event.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const paymentIsComplete = queryState.payment === 'success'
+  const paymentWasCancelled = queryState.payment === 'cancelled'
+
+  function setField(event) {
+    const { name, value, checked, type } = event.target
+    setForm((current) => ({
+      ...current,
+      [name]: type === 'checkbox' ? checked : value,
+    }))
+    setMessage('')
   }
 
-  async function submitEvaluationRequest(event) {
-    event.preventDefault();
-    setSaving(true);
-    setMessage("");
+  function choosePayment(paymentChoice) {
+    setForm((current) => ({ ...current, paymentChoice }))
+    setMessage('')
+  }
 
-    const requiredFields = [
-      "athlete_first_name",
-      "athlete_last_name",
-      "grade",
-      "birth_year",
-      "position",
-      "parent_first_name",
-      "parent_last_name",
-      "parent_email",
-      "parent_phone"
-    ];
+  async function submitRegistration(event) {
+    event.preventDefault()
+    setMessage('')
 
-    const missing = requiredFields.find(field => !String(formData[field] || "").trim());
-    if (missing) {
-      setSaving(false);
-      setMessage("Please complete all required fields before submitting.");
-      return;
+    if (!form.informationConfirmed || !form.evaluationAcknowledged) {
+      setStatus('error')
+      setMessage('Please complete the required acknowledgements before registering.')
+      return
     }
 
-    const payload = {
-      athlete_first_name: formData.athlete_first_name.trim(),
-      athlete_last_name: formData.athlete_last_name.trim(),
-      grade: formData.grade,
-      birth_year: formData.birth_year.trim(),
-      position: formData.position,
-      school: formData.school.trim(),
-      parent_first_name: formData.parent_first_name.trim(),
-      parent_last_name: formData.parent_last_name.trim(),
-      parent_email: formData.parent_email.trim(),
-      phone: formData.parent_phone.trim(),
-      years_of_experience: formData.years_of_experience.trim(),
-      highest_level_played: formData.highest_level_played.trim(),
-      improvement_goals: formData.improvement_goals.trim(),
-      what_does_the_athlete_want_to_improve: formData.improvement_goals.trim(),
-      status: "evaluation_complete",
-      submitted_from: "thrive_parent_app",
-      submitted_origin: window.location.origin,
-      parent_app_submitted_at: new Date().toISOString()
-    };
+    setStatus('submitting')
 
-    const { error } = await supabase.from("evaluation_submissions").insert([payload]);
+    try {
+      const response = await fetch('/api/evaluation-registration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
 
-    setSaving(false);
+      const payload = await response.json().catch(() => ({}))
 
-    if (error) {
-      setMessage(`Could not submit request: ${error.message}`);
-      return;
+      if (!response.ok) {
+        throw new Error(
+          payload.error ||
+            'We could not save the registration. Please review the form and try again.'
+        )
+      }
+
+      const athleteName = `${form.athleteFirstName} ${form.athleteLastName}`.trim()
+      setSubmittedAthlete(athleteName)
+
+      if (payload.paymentUrl) {
+        window.location.assign(payload.paymentUrl)
+        return
+      }
+
+      setStatus('success')
+      setForm(initialForm)
+      setMessage(
+        `${athleteName}'s registration is saved. The $${EVALUATION_FEE} Development Evaluation fee is due at the scheduled evaluation session.`
+      )
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch (error) {
+      setStatus('error')
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : 'The registration could not be submitted. Please try again.'
+      )
     }
+  }
 
-    setSubmitted(true);
-    setFormData(EMPTY_FORM);
-    setMessage("Your THRiVE evaluation information has been submitted. THRiVE coaches will review it in the Processing area.");
+  function startAnotherRegistration() {
+    setForm(initialForm)
+    setStatus('idle')
+    setMessage('')
+    setSubmittedAthlete('')
+    window.history.replaceState({}, '', window.location.pathname)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   return (
-    <main className="parentApp">
-      <section className="parentHero">
-        <div className="parentBrand">
-          <img src="/thrive-logo.png" alt="THRiVE Basketball Academy" />
-          <div>
-            <strong>THRiVE</strong>
-            <span>Basketball Academy</span>
+    <div className="registration-site">
+      <SiteHeader />
+
+      <main>
+        <section className="registration-hero">
+          <div className="hero-copy">
+            <p className="eyebrow">THRiVE Development Evaluation</p>
+            <h1>
+              Every athlete has a starting point.
+              <span>Discover yours.</span>
+            </h1>
+            <p className="hero-lede">
+              Register for a Development Evaluation across Mind • Body • Skill.
+              THRiVE will identify strengths, Development Priorities, Next Steps,
+              and an appropriate starting stage in the THRiVE Development Pathway.
+            </p>
+
+            <div className="hero-facts" aria-label="Evaluation details">
+              <div>
+                <CircleDollarSign aria-hidden="true" />
+                <span>
+                  <strong>${EVALUATION_FEE} CAD</strong>
+                  Evaluation fee
+                </span>
+              </div>
+              <div>
+                <CreditCard aria-hidden="true" />
+                <span>
+                  <strong>Two payment options</strong>
+                  Pay now or at evaluation
+                </span>
+              </div>
+              <div>
+                <ShieldCheck aria-hidden="true" />
+                <span>
+                  <strong>Secure intake</strong>
+                  Private athlete information
+                </span>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div className="heroCopy">
-          <span>Player Evaluation Request</span>
-          <h1>Start the Evaluation Process</h1>
-          <p>Submit your athlete’s information and THRiVE will place them into the right evaluation pathway based on age, skill, and development needs.</p>
-        </div>
+          <div className="hero-system-card" aria-label="THRiVE development model">
+            <div className="system-mark system-mark--mind">
+              <span>Mind</span>
+              <small>Think the game</small>
+            </div>
+            <div className="system-athlete">
+              <UserRound aria-hidden="true" />
+              <strong>Athlete</strong>
+              <span>at the centre</span>
+            </div>
+            <div className="system-mark system-mark--skill">
+              <span>Skill</span>
+              <small>Build the game</small>
+            </div>
+            <div className="system-mark system-mark--body">
+              <span>Body</span>
+              <small>Prepare to perform</small>
+            </div>
+            <div className="system-stage">Evaluation establishes the starting stage</div>
+          </div>
+        </section>
 
-        <div className="heroTrust">
-          <ShieldCheck size={18} />
-          <span>Private intake form · Coach reviewed · Evaluation pathway</span>
-        </div>
-      </section>
+        <section className="journey-strip" aria-label="Registration journey">
+          {[
+            ['01', 'Register'],
+            ['02', 'Choose Payment'],
+            ['03', 'Attend Evaluation'],
+            ['04', 'Receive Development Review'],
+          ].map(([number, label]) => (
+            <div key={number}>
+              <span>{number}</span>
+              <strong>{label}</strong>
+            </div>
+          ))}
+        </section>
 
-      <section className="formShell">
-        {submitted && (
-          <div className="successCard">
-            <CheckCircle2 size={22} />
+        {paymentIsComplete ? (
+          <SuccessPanel
+            title="Payment received. Registration complete."
+            message={`Your $${EVALUATION_FEE} Development Evaluation payment was completed successfully. THRiVE will contact you with evaluation session options and next steps.`}
+            onReset={startAnotherRegistration}
+          />
+        ) : null}
+
+        {paymentWasCancelled ? (
+          <div className="notice notice--warning">
+            <Clock3 aria-hidden="true" />
             <div>
-              <strong>Request received</strong>
-              <span>Thank you. THRiVE will follow up as evaluation sessions are organized.</span>
+              <strong>Your registration was saved, but online payment was not completed.</strong>
+              <span>
+                The evaluation fee remains due. THRiVE can send another payment option,
+                or you may pay ${EVALUATION_FEE} at the scheduled evaluation.
+              </span>
+              {queryState.submissionId ? (
+                <small>Registration reference: {queryState.submissionId}</small>
+              ) : null}
             </div>
           </div>
+        ) : null}
+
+        {status === 'success' ? (
+          <SuccessPanel
+            title="Evaluation registration received."
+            message={message}
+            athleteName={submittedAthlete}
+            onReset={startAnotherRegistration}
+          />
+        ) : (
+          <section className="registration-layout">
+            <form className="registration-form" onSubmit={submitRegistration} noValidate>
+              <FormIntro />
+
+              <FormSection
+                number="01"
+                title="Athlete Information"
+                description="Tell us who the athlete is today. Families do not select a THRiVE Development Stage."
+              >
+                <div className="form-grid">
+                  <Field
+                    label="Athlete First Name"
+                    name="athleteFirstName"
+                    value={form.athleteFirstName}
+                    onChange={setField}
+                    autoComplete="given-name"
+                    required
+                  />
+                  <Field
+                    label="Athlete Last Name"
+                    name="athleteLastName"
+                    value={form.athleteLastName}
+                    onChange={setField}
+                    autoComplete="family-name"
+                    required
+                  />
+                  <Field
+                    label="Athlete Email"
+                    name="athleteEmail"
+                    value={form.athleteEmail}
+                    onChange={setField}
+                    type="email"
+                    autoComplete="email"
+                    help="Optional. Use an athlete-specific email when available."
+                  />
+                  <SelectField
+                    label="Birth Year"
+                    name="birthYear"
+                    value={form.birthYear}
+                    onChange={setField}
+                    options={birthYears}
+                    placeholder="Select birth year"
+                    required
+                  />
+                  <SelectField
+                    label="Current Grade / Level"
+                    name="grade"
+                    value={form.grade}
+                    onChange={setField}
+                    options={gradeOptions}
+                    placeholder="Select grade or level"
+                    required
+                  />
+                  <SelectField
+                    label="Primary Position"
+                    name="position"
+                    value={form.position}
+                    onChange={setField}
+                    options={positionOptions}
+                    placeholder="Select position"
+                    required
+                  />
+                  <Field
+                    label="School / Institution"
+                    name="school"
+                    value={form.school}
+                    onChange={setField}
+                    placeholder="Current school or institution"
+                    full
+                  />
+                </div>
+              </FormSection>
+
+              <FormSection
+                number="02"
+                title="Parent / Guardian"
+                description="This is the primary contact THRiVE will use for evaluation communication."
+              >
+                <div className="form-grid">
+                  <Field
+                    label="Parent / Guardian First Name"
+                    name="parentFirstName"
+                    value={form.parentFirstName}
+                    onChange={setField}
+                    autoComplete="given-name"
+                    required
+                  />
+                  <Field
+                    label="Parent / Guardian Last Name"
+                    name="parentLastName"
+                    value={form.parentLastName}
+                    onChange={setField}
+                    autoComplete="family-name"
+                    required
+                  />
+                  <Field
+                    label="Email"
+                    name="parentEmail"
+                    value={form.parentEmail}
+                    onChange={setField}
+                    type="email"
+                    autoComplete="email"
+                    required
+                  />
+                  <Field
+                    label="Mobile Number"
+                    name="parentPhone"
+                    value={form.parentPhone}
+                    onChange={setField}
+                    type="tel"
+                    autoComplete="tel"
+                    required
+                  />
+                </div>
+              </FormSection>
+
+              <FormSection
+                number="03"
+                title="Basketball Background"
+                description="This provides context only. THRiVE will evaluate the athlete in front of us."
+              >
+                <div className="form-grid">
+                  <Field
+                    label="Years Playing Basketball"
+                    name="yearsExperience"
+                    value={form.yearsExperience}
+                    onChange={setField}
+                    placeholder="Example: 4 years"
+                  />
+                  <Field
+                    label="Highest Level Played"
+                    name="highestLevelPlayed"
+                    value={form.highestLevelPlayed}
+                    onChange={setField}
+                    placeholder="School, club, provincial, prep..."
+                  />
+                  <TextAreaField
+                    label="What does the athlete want to improve?"
+                    name="improvementGoals"
+                    value={form.improvementGoals}
+                    onChange={setField}
+                    placeholder="Shooting confidence, ball handling, finishing, movement, decision-making, defense..."
+                    required
+                  />
+                  <TextAreaField
+                    label="Additional Information"
+                    name="notes"
+                    value={form.notes}
+                    onChange={setField}
+                    placeholder="Anything else THRiVE should know before the evaluation?"
+                  />
+                </div>
+              </FormSection>
+
+              <FormSection
+                number="04"
+                title="Evaluation Fee"
+                description={`Choose how you will pay the $${EVALUATION_FEE} Development Evaluation fee.`}
+              >
+                <div className="payment-choice-grid">
+                  <PaymentChoice
+                    selected={form.paymentChoice === 'pay_now'}
+                    icon={<CreditCard aria-hidden="true" />}
+                    title={`Pay Now — $${EVALUATION_FEE}`}
+                    description="Complete secure Stripe Checkout after submitting this registration."
+                    badge="Recommended"
+                    onClick={() => choosePayment('pay_now')}
+                  />
+                  <PaymentChoice
+                    selected={form.paymentChoice === 'pay_at_evaluation'}
+                    icon={<UsersRound aria-hidden="true" />}
+                    title={`Pay at Evaluation — $${EVALUATION_FEE}`}
+                    description="Bring payment to the scheduled evaluation before the athlete enters the gym."
+                    onClick={() => choosePayment('pay_at_evaluation')}
+                  />
+                </div>
+
+                <input
+                  className="honeypot"
+                  tabIndex="-1"
+                  autoComplete="off"
+                  name="website"
+                  value={form.website}
+                  onChange={setField}
+                  aria-hidden="true"
+                />
+              </FormSection>
+
+              <FormSection
+                number="05"
+                title="Review & Acknowledge"
+                description="Confirm the information and THRiVE Development Evaluation process."
+              >
+                <div className="acknowledgement-list">
+                  <CheckboxField
+                    name="informationConfirmed"
+                    checked={form.informationConfirmed}
+                    onChange={setField}
+                    required
+                  >
+                    I confirm the athlete and parent/guardian information is accurate.
+                  </CheckboxField>
+                  <CheckboxField
+                    name="evaluationAcknowledged"
+                    checked={form.evaluationAcknowledged}
+                    onChange={setField}
+                    required
+                  >
+                    I understand the evaluation establishes a developmental starting point;
+                    families do not select a Development Stage and advancement is not guaranteed.
+                  </CheckboxField>
+                  <CheckboxField
+                    name="communicationConsent"
+                    checked={form.communicationConsent}
+                    onChange={setField}
+                  >
+                    I agree to receive evaluation scheduling and THRiVE program communication
+                    related to this registration.
+                  </CheckboxField>
+                </div>
+              </FormSection>
+
+              {message && status === 'error' ? (
+                <div className="form-error" role="alert">
+                  {message}
+                </div>
+              ) : null}
+
+              <button
+                className="submit-button"
+                type="submit"
+                disabled={status === 'submitting'}
+              >
+                <span>
+                  {status === 'submitting'
+                    ? 'Saving Registration...'
+                    : form.paymentChoice === 'pay_now'
+                      ? `Register & Pay $${EVALUATION_FEE}`
+                      : 'Register — Pay at Evaluation'}
+                </span>
+                <ArrowRight aria-hidden="true" />
+              </button>
+
+              <div className="secure-note">
+                <LockKeyhole aria-hidden="true" />
+                <span>
+                  Athlete information is submitted securely to THRiVE Athlete Intake.
+                  Online payment is processed by Stripe.
+                </span>
+              </div>
+            </form>
+
+            <EvaluationSummary paymentChoice={form.paymentChoice} />
+          </section>
         )}
+      </main>
 
-        {message && <div className={submitted ? "formMessage success" : "formMessage"}>{message}</div>}
-
-        <form className="requestForm" onSubmit={submitEvaluationRequest}>
-          <FormSection title="Athlete Information" />
-          <div className="formGrid">
-            <Field label="Athlete First Name" name="athlete_first_name" value={formData.athlete_first_name} onChange={handleChange} required />
-            <Field label="Athlete Last Name" name="athlete_last_name" value={formData.athlete_last_name} onChange={handleChange} required />
-
-            <div className="field">
-              <label>Evaluation Group / Age Level *</label>
-              <select name="grade" value={formData.grade} onChange={handleChange} required>
-                <option value="">Select Evaluation Group</option>
-                <option value="Grade 5/6">Grade 5/6</option>
-                <option value="Grade 7/8">Grade 7/8</option>
-                <option value="Grade 9/10">Grade 9/10</option>
-                <option value="Grade 11/12/Prep/U1">Grade 11/12/Prep/U1</option>
-              </select>
-            </div>
-
-            <Field label="Birth Year" name="birth_year" value={formData.birth_year} onChange={handleChange} placeholder="2010" required />
-
-            <div className="field">
-              <label>Position *</label>
-              <select name="position" value={formData.position} onChange={handleChange} required>
-                <option value="">Select Position</option>
-                <option value="Guard">Guard</option>
-                <option value="Forward">Forward</option>
-                <option value="Post">Post</option>
-              </select>
-            </div>
-
-            <Field label="School" name="school" value={formData.school} onChange={handleChange} />
-          </div>
-
-          <FormSection title="Parent / Guardian Information" />
-          <div className="formGrid">
-            <Field label="Parent First Name" name="parent_first_name" value={formData.parent_first_name} onChange={handleChange} required />
-            <Field label="Parent Last Name" name="parent_last_name" value={formData.parent_last_name} onChange={handleChange} required />
-            <Field label="Parent Email" type="email" name="parent_email" value={formData.parent_email} onChange={handleChange} required />
-            <Field label="Parent Phone" type="tel" name="parent_phone" value={formData.parent_phone} onChange={handleChange} required />
-          </div>
-
-          <FormSection title="Basketball Background" />
-          <div className="formGrid">
-            <Field label="Years of Experience" name="years_of_experience" value={formData.years_of_experience} onChange={handleChange} />
-            <Field label="Highest Level Played" name="highest_level_played" value={formData.highest_level_played} onChange={handleChange} />
-          </div>
-
-          <div className="field full">
-            <label>What does the athlete want to improve?</label>
-            <textarea
-              name="improvement_goals"
-              value={formData.improvement_goals}
-              onChange={handleChange}
-              placeholder="Example: shooting confidence, ball handling, finishing, defensive footwork, decision-making..."
-            />
-          </div>
-
-          <button className="submitBtn" disabled={saving}>
-            <Send size={18} /> {saving ? "Submitting..." : "Submit Evaluation Request"}
-          </button>
-        </form>
-      </section>
-    </main>
-  );
-}
-
-function FormSection({ title }) {
-  return <h2 className="sectionTitle">{title}</h2>;
-}
-
-function Field({ label, name, value, onChange, type = "text", placeholder = "", required = false }) {
-  return (
-    <div className="field">
-      <label>{label}{required ? " *" : ""}</label>
-      <input type={type} name={name} value={value} onChange={onChange} placeholder={placeholder} required={required} />
+      <SiteFooter />
     </div>
-  );
+  )
+}
+
+function SiteHeader() {
+  return (
+    <header className="site-header">
+      <a className="logo-zone" href="https://www.thrivebasketball.org" aria-label="THRiVE Basketball Academy home">
+        <img src="/thrive-logo.png" alt="THRiVE Basketball Academy" />
+      </a>
+      <div className="header-utility">
+        <a href="https://www.thrivebasketball.org/evaluation">
+          <ArrowLeft aria-hidden="true" /> Evaluation Information
+        </a>
+        <a href="https://parent.thrivebasketball.org">Parent Portal</a>
+      </div>
+    </header>
+  )
+}
+
+function FormIntro() {
+  return (
+    <div className="form-intro">
+      <div>
+        <p className="eyebrow">Registration</p>
+        <h2>Start your THRiVE journey.</h2>
+        <p>
+          Complete the secure intake below. Required fields are marked with an asterisk.
+        </p>
+      </div>
+      <div className="fee-pill">
+        <CircleDollarSign aria-hidden="true" />
+        <span>
+          <strong>${EVALUATION_FEE}</strong>
+          CAD
+        </span>
+      </div>
+    </div>
+  )
+}
+
+function FormSection({ number, title, description, children }) {
+  return (
+    <section className="form-section">
+      <div className="form-section-heading">
+        <span>{number}</span>
+        <div>
+          <h3>{title}</h3>
+          <p>{description}</p>
+        </div>
+      </div>
+      {children}
+    </section>
+  )
+}
+
+function Field({
+  label,
+  name,
+  value,
+  onChange,
+  type = 'text',
+  placeholder = '',
+  autoComplete,
+  help,
+  required = false,
+  full = false,
+}) {
+  return (
+    <label className={full ? 'form-field form-field--full' : 'form-field'}>
+      <span>
+        {label} {required ? <b>*</b> : null}
+      </span>
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        required={required}
+      />
+      {help ? <small>{help}</small> : null}
+    </label>
+  )
+}
+
+function SelectField({
+  label,
+  name,
+  value,
+  onChange,
+  options,
+  placeholder,
+  required = false,
+}) {
+  return (
+    <label className="form-field">
+      <span>
+        {label} {required ? <b>*</b> : null}
+      </span>
+      <select name={name} value={value} onChange={onChange} required={required}>
+        <option value="">{placeholder}</option>
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+}
+
+function TextAreaField({
+  label,
+  name,
+  value,
+  onChange,
+  placeholder,
+  required = false,
+}) {
+  return (
+    <label className="form-field form-field--full">
+      <span>
+        {label} {required ? <b>*</b> : null}
+      </span>
+      <textarea
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        rows="5"
+        required={required}
+      />
+    </label>
+  )
+}
+
+function PaymentChoice({ selected, icon, title, description, badge, onClick }) {
+  return (
+    <button
+      type="button"
+      className={selected ? 'payment-choice is-selected' : 'payment-choice'}
+      onClick={onClick}
+      aria-pressed={selected}
+    >
+      <span className="payment-choice-icon">{icon}</span>
+      <span className="payment-choice-copy">
+        <span className="payment-choice-title-row">
+          <strong>{title}</strong>
+          {badge ? <em>{badge}</em> : null}
+        </span>
+        <small>{description}</small>
+      </span>
+      <span className="payment-choice-check" aria-hidden="true">
+        {selected ? <Check /> : null}
+      </span>
+    </button>
+  )
+}
+
+function CheckboxField({ name, checked, onChange, required = false, children }) {
+  return (
+    <label className="checkbox-field">
+      <input
+        type="checkbox"
+        name={name}
+        checked={checked}
+        onChange={onChange}
+        required={required}
+      />
+      <span className="custom-check" aria-hidden="true">
+        {checked ? <Check /> : null}
+      </span>
+      <span>{children}</span>
+    </label>
+  )
+}
+
+function EvaluationSummary({ paymentChoice }) {
+  return (
+    <aside className="evaluation-summary">
+      <div className="summary-card summary-card--primary">
+        <p className="eyebrow">Your First Step</p>
+        <h2>Development Evaluation</h2>
+        <div className="summary-price">
+          <strong>${EVALUATION_FEE}</strong>
+          <span>CAD</span>
+        </div>
+        <p>
+          Evaluation across Mind • Body • Skill followed by a Development Review.
+        </p>
+      </div>
+
+      <div className="summary-card">
+        <h3>What families receive</h3>
+        <ul>
+          {[
+            'Strengths',
+            'Development Priorities',
+            'Next Steps',
+            'Evaluated Development Stage',
+          ].map((item) => (
+            <li key={item}>
+              <CheckCircle2 aria-hidden="true" /> {item}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="summary-card summary-card--payment">
+        <h3>Payment selected</h3>
+        <div>
+          {paymentChoice === 'pay_now' ? (
+            <CreditCard aria-hidden="true" />
+          ) : (
+            <UsersRound aria-hidden="true" />
+          )}
+          <span>
+            <strong>
+              {paymentChoice === 'pay_now' ? 'Pay Now' : 'Pay at Evaluation'}
+            </strong>
+            ${EVALUATION_FEE} CAD
+          </span>
+        </div>
+      </div>
+
+      <div className="summary-card summary-card--quiet">
+        <Sparkles aria-hidden="true" />
+        <p>
+          <strong>You do not choose a THRiVE stage.</strong>
+          Evaluation helps us understand where the athlete is today and what should come next.
+        </p>
+      </div>
+    </aside>
+  )
+}
+
+function SuccessPanel({ title, message, athleteName = '', onReset }) {
+  return (
+    <section className="success-panel">
+      <span className="success-icon">
+        <CheckCircle2 aria-hidden="true" />
+      </span>
+      <p className="eyebrow">Registration Received</p>
+      <h2>{title}</h2>
+      {athleteName ? <strong>{athleteName}</strong> : null}
+      <p>{message}</p>
+      <div className="success-next-steps">
+        <span>1</span>
+        <p>THRiVE reviews the registration and evaluation-fee status.</p>
+        <span>2</span>
+        <p>You receive available evaluation session options.</p>
+        <span>3</span>
+        <p>The athlete attends and receives a Development Review.</p>
+      </div>
+      <button type="button" onClick={onReset}>
+        Register Another Athlete <ArrowRight aria-hidden="true" />
+      </button>
+    </section>
+  )
+}
+
+function SiteFooter() {
+  return (
+    <footer className="site-footer">
+      <div>
+        <img src="/thrive-logo.png" alt="THRiVE Basketball Academy" />
+        <p>Developing Athletes. Building Better People.</p>
+      </div>
+      <div>
+        <strong>Mind • Body • Skill</strong>
+        <span>Come Out and Play.</span>
+      </div>
+      <div>
+        <a href="https://www.thrivebasketball.org">THRiVE Website</a>
+        <a href="https://parent.thrivebasketball.org">Parent Portal</a>
+        <a href="mailto:evaluation@thrivebasketball.org">Contact THRiVE</a>
+      </div>
+    </footer>
+  )
 }
