@@ -27,9 +27,17 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function clean(value, maxLength = 3000) {
   return String(value ?? '')
-    .replace(/\u0000/g, '')
+    .replaceAll(String.fromCharCode(0), '')
     .trim()
     .slice(0, maxLength)
+}
+
+function parseJson(raw) {
+  try {
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
 }
 
 function getSupabaseConfig() {
@@ -76,13 +84,7 @@ async function insertEvaluationSubmission(payload) {
   )
 
   const raw = await response.text()
-  let data = null
-
-  try {
-    data = raw ? JSON.parse(raw) : null
-  } catch {
-    data = null
-  }
+  const data = parseJson(raw)
 
   if (!response.ok) {
     console.error('THRiVE evaluation registration insert failed:', response.status, raw)
@@ -167,13 +169,7 @@ async function createStripeCheckout({ submission, parentEmail, athleteName, req 
   })
 
   const raw = await response.text()
-  let session = null
-
-  try {
-    session = raw ? JSON.parse(raw) : null
-  } catch {
-    session = null
-  }
+  const session = parseJson(raw)
 
   if (!response.ok || !session?.url) {
     console.error('THRiVE Stripe Checkout creation failed:', response.status, raw)
